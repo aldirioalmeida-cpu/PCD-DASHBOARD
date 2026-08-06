@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de PCDs · GOES DCS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0f1a;
+    --panel: #111a2b;
+    --panel-2: #0d1524;
+    --line: #22304a;
+    --text: #d7e0ee;
+    --muted: #7c8aa3;
+    --amber: #ffb020;
+    --green: #3ecf8e;
+    --red: #ff5d5d;
+    --blue: #5b8cff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #101b30 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  .scanline {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 50;
+  }
+
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .brand .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    display: inline-block;
+    box-shadow: 0 0 12px var(--amber);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  h1 {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  header .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .clock {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .clock span { color: var(--text); }
+
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 32px 60px;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .panel h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 14px 0 6px;
+  }
+  label:first-of-type { margin-top: 0; }
+
+  input, textarea, select {
+    width: 100%;
+    background: #0a1220;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 9px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--amber); }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 20px;
+    background: var(--amber);
+    color: #0a0f1a;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: scale(0.99); }
+  button:disabled { opacity: 0.5; cursor: wait; }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .error-box {
+    display: none;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(255, 93, 93, 0.08);
+    border: 1px solid rgba(255, 93, 93, 0.35);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--red);
+  }
+
+  .results-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .summary {
+    display: flex;
+    gap: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .summary .n { font-size: 16px; font-weight: 700; }
+  .summary .ok .n { color: var(--green); }
+  .summary .down .n { color: var(--red); }
+  .summary .none .n { color: var(--muted); }
+
+  .ft-status-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--line);
+  }
+  .ft-status-card.pass {
+    background: rgba(62,207,142,0.08);
+    border-color: rgba(62,207,142,0.35);
+  }
+  .ft-status-card.fail {
+    background: rgba(255,93,93,0.08);
+    border-color: rgba(255,93,93,0.35);
+  }
+  .ft-status-icon {
+    font-size: 34px;
+    line-height: 1;
+  }
+  .ft-status-card.pass .ft-status-icon { color: var(--green); }
+  .ft-status-card.fail .ft-status-icon { color: var(--red); }
+  .ft-status-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .ft-status-card.pass .ft-status-title { color: var(--green); }
+  .ft-status-card.fail .ft-status-title { color: var(--red); }
+  .ft-status-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .ft-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .ft-info-item .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .ft-info-item .v {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  .data-cell {
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(34,48,74,0.5);
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  td {
+    padding: 10px;
+    vertical-align: middle;
+  }
+
+  .addr { color: var(--blue); font-weight: 500; }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .status-pill.ok { background: rgba(62,207,142,0.12); color: var(--green); }
+  .status-pill.sem_transmitir { background: rgba(255,93,93,0.14); color: var(--red); }
+  .status-pill.sem_dados { background: rgba(124,138,163,0.14); color: var(--muted); }
+
+  .status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .signal-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .signal-track {
+    width: 46px;
+    height: 5px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .signal-fill {
+    height: 100%;
+    background: var(--amber);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .empty-state .glyph {
+    font-size: 28px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab-btn {
+    width: auto;
+    margin-top: 0;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 10px 4px;
+    margin-right: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+  .tab-btn:hover { filter: none; color: var(--text); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .link-btn {
+    width: auto;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 11.5px;
+    padding: 7px 10px;
+    margin-top: 8px;
+  }
+  .link-btn:hover { color: var(--amber); border-color: var(--amber); filter: none; }
+
+  .pct-bar-track {
+    width: 80px;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  .pct-bar-fill { height: 100%; }
+  .pct-high { background: var(--green); }
+  .pct-mid { background: var(--amber); }
+  .pct-low { background: var(--red); }
+
+  footer {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px 40px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      <h1>MONITOR DE PCDs — GOES DCS</h1>
+      <div class="sub">Consulta direta ao servidor LRGS via protocolo DDS</div>
+    </div>
+  </div>
+  <div class="clock">
+    ÚLTIMA CONSULTA<br><span id="lastQuery">—</span>
+    <div style="margin-top:6px;"><a href="/logout" style="color:var(--muted); font-size:10.5px; text-decoration:none;">sair</a></div>
+  </div>
+</header>
+
+<main style="display:block; max-width:1180px;">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="status">Status atual</button>
+    <button class="tab-btn" data-tab="coverage">Percentual de transmissão</button>
+    <button class="tab-btn" data-tab="fieldtest">Teste de campo</button>
+  </div>
+
+  <!-- ==================== ABA 1: STATUS ATUAL ==================== -->
+  <div class="tab-panel active" id="panel-status">
+    <div style="display:grid; grid-template-columns:320px 1fr; gap:24px;">
+      <section class="panel">
+        <h2>Parâmetros de conexão</h2>
+
+        <label for="host">Servidor LRGS</label>
+        <input id="host" list="hosts" placeholder="cdadata.wcda.noaa.gov" value="cdadata.wcda.noaa.gov">
+        <datalist id="hosts">
+          <option value="cdadata.wcda.noaa.gov">
+          <option value="cdabackup.wcda.noaa.gov">
+          <option value="nlrgs1.noaa.gov">
+          <option value="nlrgs2.noaa.gov">
+          <option value="lrgseddn1.cr.usgs.gov">
+          <option value="lrgseddn2.cr.usgs.gov">
+        </datalist>
+
+        <div class="row2">
+          <div>
+            <label for="port">Porta</label>
+            <input id="port" value="16003">
+          </div>
+          <div>
+            <label for="username">Usuário DDS</label>
+            <input id="username" placeholder="usuário" value="inema1">
+          </div>
+        </div>
+
+        <label for="password">Senha</label>
+        <input id="password" type="password" placeholder="senha" value="bodd-ZIEQ-84">
+
+        <h2 style="margin-top:24px;">Plataformas (PCDs)</h2>
+        <label for="addresses">Endereços DCP (um por linha, hex de 8 dígitos)</label>
+        <textarea id="addresses" placeholder="CE3E13BC&#10;CE3E86DE&#10;CE456DFA"></textarea>
+
+        <label for="categorySelect1">Adicionar por tipo</label>
+        <div class="row2" style="align-items:end;">
+          <select id="categorySelect1" style="grid-column:1/2;"></select>
+          <button class="link-btn" id="addCategoryBtn1" type="button" style="margin-top:0;">+ Adicionar</button>
+        </div>
+        <button class="link-btn" id="loadStationsBtn1" type="button">Carregar as 126 PCDs do INEMA</button>
+        <button class="link-btn" id="clearAddressesBtn1" type="button">Limpar lista</button>
+
+        <div class="row2">
+          <div>
+            <label for="lookback">Janela de busca (h)</label>
+            <input id="lookback" value="48">
+          </div>
+          <div>
+            <label for="threshold">Alerta sem transmitir (h)</label>
+            <input id="threshold" value="6">
+          </div>
+        </div>
+
+        <div class="row2" style="margin-top:20px;">
+          <button id="runBtn" style="margin-top:0;">Consultar plataformas</button>
+          <button id="stopBtn" type="button" style="margin-top:0; display:none; background:var(--red); color:#fff;">Parar consulta</button>
+        </div>
+        <div class="hint">Usuário e senha já vêm preenchidos para uso interno. O arquivo com a senha fica só no seu computador — não o compartilhe fora do time.</div>
+        <div class="error-box" id="errorBox"></div>
+      </section>
+
+      <section class="panel">
+        <div class="results-head">
+          <h2 style="margin:0;">Status das plataformas</h2>
+          <div class="summary" id="summary" style="display:none;">
+            <div class="ok"><div class="n" id="sumOk">0</div>OK</div>
+            <div class="down"><div class="n" id="sumDown">0</div>SEM TRANSMISSÃO</div>
+          </div>
+        </div>
+
+        <div id="tableWrap">
+          <div class="empty-state">
+            <div class="glyph">▤ ▤ ▤</div>
+            Configure a conexão e a lista de PCDs, depois clique em<br>"Consultar plataformas".
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ==================== ABA 2: PERCENTUAL DE TRANSMISSÃO ==================== -->
+  <div class="tab-panel" id="panel-coverage">
+    <div style="display:grid; grid-template-columns:320px 1fr; gap:24px;">
+      <section class="panel">
+        <h2>Parâmetros de conexão</h2>
+
+        <label for="host2">Servidor LRGS</label>
+        <input id="host2" list="hosts" placeholder="cdadata.wcda.noaa.gov" value="cdadata.wcda.noaa.gov">
+
+        <div class="row2">
+          <div>
+            <label for="port2">Porta</label>
+            <input id="port2" value="16003">
+          </div>
+          <div>
+            <label for="username2">Usuário DDS</label>
+            <input id="username2" placeholder="usuário" value="inema1">
+          </div>
+        </div>
+
+        <label for="password2">Senha</label>
+        <input id="password2" type="password" placeholder="senha" value="bodd-ZIEQ-84">
+
+        <h2 style="margin-top:24px;">Plataformas (PCDs)</h2>
+        <label for="addresses2">Endereços DCP (um por linha, hex de 8 dígitos)</label>
+        <textarea id="addresses2" placeholder="CE3E13BC&#10;CE3E86DE&#10;CE456DFA"></textarea>
+
+        <label for="categorySelect2">Adicionar por tipo</label>
+        <div class="row2" style="align-items:end;">
+          <select id="categorySelect2" style="grid-column:1/2;"></select>
+          <button class="link-btn" id="addCategoryBtn2" type="button" style="margin-top:0;">+ Adicionar</button>
+        </div>
+        <button class="link-btn" id="loadStationsBtn2" type="button">Carregar as 126 PCDs do INEMA</button>
+        <button class="link-btn" id="clearAddressesBtn2" type="button">Limpar lista</button>
+
+        <h2 style="margin-top:24px;">Intervalo (UTC)</h2>
+        <label for="startDt">Início</label>
+        <input id="startDt" type="datetime-local">
+        <label for="endDt">Fim</label>
+        <input id="endDt" type="datetime-local">
+        <label for="interval">Intervalo esperado entre transmissões (h)</label>
+        <input id="interval" value="1">
+        <label for="recentHours">Considerar "transmitindo" se teve dado nas últimas (h)</label>
+        <input id="recentHours" value="6">
+
+        <div class="row2" style="margin-top:20px;">
+          <button id="runCoverageBtn" style="margin-top:0;">Calcular percentual</button>
+          <button id="stopCoverageBtn" type="button" style="margin-top:0; display:none; background:var(--red); color:#fff;">Parar consulta</button>
+        </div>
+        <div class="hint">Todos os horários são interpretados em UTC (o mesmo padrão usado pelo GOES DCS). Usuário e senha já vêm preenchidos para uso interno.</div>
+        <div class="error-box" id="errorBoxCov"></div>
+      </section>
+
+      <section class="panel">
+        <div class="results-head">
+          <h2 style="margin:0;">Percentual de transmissão por PCD</h2>
+          <div class="summary" id="summaryCov" style="display:none; font-family:'JetBrains Mono',monospace; font-size:12px;">
+            <div>Média cobertura: <span id="covAvg" style="color:var(--amber); font-weight:700;">—</span></div>
+            <div id="transmittingWrap">Transmitindo agora: <span id="covTransmitting" style="font-weight:700;">—</span></div>
+          </div>
+        </div>
+
+        <div id="tableWrapCov">
+          <div class="empty-state">
+            <div class="glyph">◔ ◑ ◕</div>
+            Configure o intervalo de datas e a lista de PCDs, depois clique em<br>"Calcular percentual".
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ==================== ABA 4: TESTE DE CAMPO ==================== -->
+  <div class="tab-panel" id="panel-fieldtest">
+    <div style="display:grid; grid-template-columns:320px 1fr; gap:24px;">
+      <section class="panel">
+        <h2>Parâmetros de conexão</h2>
+
+        <label for="host3">Servidor LRGS</label>
+        <input id="host3" list="hosts" placeholder="cdadata.wcda.noaa.gov" value="cdadata.wcda.noaa.gov">
+
+        <div class="row2">
+          <div>
+            <label for="port3">Porta</label>
+            <input id="port3" value="16003">
+          </div>
+          <div>
+            <label for="username3">Usuário DDS</label>
+            <input id="username3" placeholder="usuário" value="inema1">
+          </div>
+        </div>
+
+        <label for="password3">Senha</label>
+        <input id="password3" type="password" placeholder="senha" value="bodd-ZIEQ-84">
+
+        <h2 style="margin-top:24px;">Qual PCD testar?</h2>
+        <label for="ftStationSelect">Escolher da lista</label>
+        <select id="ftStationSelect">
+          <option value="">— selecione uma estação —</option>
+        </select>
+
+        <label for="ftManualAddress" style="margin-top:14px;">Ou digite o endereço diretamente</label>
+        <input id="ftManualAddress" placeholder="B0405296" maxlength="8" style="text-transform:uppercase;">
+        <div class="hint">Se preencher o endereço manual, ele tem prioridade sobre a estação selecionada acima.</div>
+
+        <label for="ftLookback" style="margin-top:14px;">Janela de busca (h)</label>
+        <input id="ftLookback" value="48">
+
+        <div class="row2" style="margin-top:20px;">
+          <button id="ftRunBtn" style="margin-top:0;">Testar estação</button>
+          <button id="ftStopBtn" type="button" style="margin-top:0; display:none; background:var(--red); color:#fff;">Parar teste</button>
+        </div>
+        <div class="hint">Usuário e senha já vêm preenchidos para uso interno.</div>
+        <div class="error-box" id="ftErrorBox"></div>
+      </section>
+
+      <section class="panel">
+        <h2 style="margin:0 0 16px;">Resultado do teste</h2>
+        <div id="ftResultWrap">
+          <div class="empty-state">
+            <div class="glyph">◎</div>
+            Escolha ou digite uma PCD e clique em<br>"Testar estação".
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Protocolo DDS v14 (NOAA/NESDIS · Cove Software). Ferramenta local, sem afiliação com a NOAA.
+</footer>
+
+<script>
+const runBtn = document.getElementById('runBtn');
+const errorBox = document.getElementById('errorBox');
+const tableWrap = document.getElementById('tableWrap');
+const summary = document.getElementById('summary');
+const lastQuery = document.getElementById('lastQuery');
+
+function fmtAge(hours) {
+  if (hours === null || hours === undefined) return '—';
+  if (hours < 1) return Math.round(hours * 60) + ' min';
+  if (hours < 48) return hours.toFixed(1) + ' h';
+  return (hours / 24).toFixed(1) + ' dias';
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toISOString().replace('T', ' ').substring(0, 19) + 'Z';
+}
+
+function signalPct(sig) {
+  if (!sig) return 0;
+  const n = parseInt(sig, 10);
+  if (isNaN(n)) return 0;
+  // faixa típica documentada: 32 a 57
+  return Math.max(0, Math.min(100, ((n - 32) / (57 - 32)) * 100));
+}
+
+function statusLabel(s) {
+  if (s === 'ok') return 'OK';
+  return 'SEM TRANSMISSÃO';
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function render(data) {
+  const results = data.results;
+  let ok = 0, down = 0;
+
+  const rows = results.map(r => {
+    if (r.status === 'ok') ok++;
+    else down++;
+
+    const sig = r.signal_strength ? r.signal_strength + ' dBm*' : '—';
+    const pct = signalPct(r.signal_strength);
+    const dataText = r.data_text ? escapeHtml(r.data_text) : '—';
+
+    return `
+      <tr>
+        <td class="addr">${r.dcp_address}</td>
+        <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+        <td>${escapeHtml(r.municipio) || '—'}</td>
+        <td>${escapeHtml(r.cod_inema) || '—'}</td>
+        <td><span class="status-pill ${r.status}">${statusLabel(r.status)}</span></td>
+        <td>${fmtTime(r.last_transmission)}</td>
+        <td>${fmtAge(r.age_hours)}</td>
+        <td>${r.data_quality_desc || '—'}</td>
+        <td>
+          <div class="signal-bar">
+            <div class="signal-track"><div class="signal-fill" style="width:${pct}%"></div></div>
+            <span>${sig}</span>
+          </div>
+        </td>
+        <td>${r.channel ? r.channel + (r.spacecraft || '') : '—'}</td>
+        <td class="data-cell" title="${dataText}">${dataText}</td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('sumOk').textContent = ok;
+  document.getElementById('sumDown').textContent = down;
+  summary.style.display = 'flex';
+
+  tableWrap.innerHTML = `
+    <div class="table-scroll"><table>
+      <thead>
+        <tr>
+          <th>Endereço</th>
+          <th>Estação</th>
+          <th>Município</th>
+          <th>Cód INEMA</th>
+          <th>Status</th>
+          <th>Última transmissão (UTC)</th>
+          <th>Há quanto tempo</th>
+          <th>Qualidade</th>
+          <th>Sinal</th>
+          <th>Canal</th>
+          <th>Última mensagem (dados)</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  `;
+
+  lastQuery.textContent = fmtTime(data.queried_at);
+}
+
+// ---------- Abas ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Carregar lista de PCDs do INEMA ----------
+async function loadStationsInto(textareaId) {
+  const resp = await fetch('/api/stations');
+  const stations = await resp.json();
+  document.getElementById(textareaId).value = stations.map(s => s.address).join('\n');
+}
+document.getElementById('loadStationsBtn1').addEventListener('click', () => loadStationsInto('addresses'));
+document.getElementById('loadStationsBtn2').addEventListener('click', () => loadStationsInto('addresses2'));
+
+// ---------- Preenche datas padrão (últimas 24h) no formulário de percentual ----------
+(function setDefaultDates() {
+  const now = new Date();
+  const start = new Date(now.getTime() - 24 * 3600 * 1000);
+  const toLocalInput = (d) => d.toISOString().slice(0, 16);
+  document.getElementById('startDt').value = toLocalInput(start);
+  document.getElementById('endDt').value = toLocalInput(now);
+})();
+
+function pctClass(pct) {
+  if (pct >= 90) return 'pct-high';
+  if (pct >= 60) return 'pct-mid';
+  return 'pct-low';
+}
+
+document.getElementById('runCoverageBtn').addEventListener('click', async () => {
+  const errorBoxCov = document.getElementById('errorBoxCov');
+  const tableWrapCov = document.getElementById('tableWrapCov');
+  const summaryCov = document.getElementById('summaryCov');
+  const btn = document.getElementById('runCoverageBtn');
+  const stopBtn = document.getElementById('stopCoverageBtn');
+
+  errorBoxCov.style.display = 'none';
+
+  const addresses = document.getElementById('addresses2').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+
+  const startVal = document.getElementById('startDt').value;
+  const endVal = document.getElementById('endDt').value;
+  const requestId = (crypto.randomUUID ? crypto.randomUUID() : 'req-' + Date.now() + '-' + Math.random());
+
+  const payload = {
+    host: document.getElementById('host2').value.trim(),
+    port: parseInt(document.getElementById('port2').value, 10) || 16003,
+    username: document.getElementById('username2').value.trim(),
+    password: document.getElementById('password2').value,
+    dcp_addresses: addresses,
+    start: startVal, // datetime-local já vem sem timezone; tratado como UTC no backend
+    end: endVal,
+    interval_hours: parseFloat(document.getElementById('interval').value) || 1,
+    recent_hours: parseFloat(document.getElementById('recentHours').value) || 6,
+    request_id: requestId,
+  };
+
+  const controller = new AbortController();
+  btn.disabled = true;
+  btn.textContent = 'Calculando...';
+  btn.style.display = 'none';
+  stopBtn.style.display = 'block';
+  let aborting = false;
+
+  const onStop = async () => {
+    aborting = true;
+    stopBtn.disabled = true;
+    stopBtn.textContent = 'Parando...';
+    controller.abort();
+    try {
+      await fetch('/api/abort', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id: requestId }),
+      });
+    } catch (e) { /* ignora */ }
+  };
+  stopBtn.disabled = false;
+  stopBtn.textContent = 'Parar consulta';
+  stopBtn.onclick = onStop;
+
+  try {
+    const resp = await fetch('/api/coverage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      errorBoxCov.textContent = data.error || 'Erro desconhecido.';
+      errorBoxCov.style.display = 'block';
+    } else {
+      const results = data.results;
+      const avg = results.length
+        ? (results.reduce((s, r) => s + r.pct, 0) / results.length).toFixed(1)
+        : '—';
+      document.getElementById('covAvg').textContent = avg + '%';
+
+      const tn = data.transmitting_now;
+      const covTransmitting = document.getElementById('covTransmitting');
+      if (tn) {
+        covTransmitting.textContent = `${tn.pct}% (${tn.count}/${tn.total} nas últimas ${tn.recent_hours}h)`;
+        covTransmitting.style.color = tn.pct >= 90 ? 'var(--green)' : (tn.pct >= 60 ? 'var(--amber)' : 'var(--red)');
+      }
+      summaryCov.style.display = 'block';
+
+      const rows = results.map(r => `
+        <tr>
+          <td class="addr">${r.dcp_address}</td>
+          <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+          <td>${escapeHtml(r.municipio) || '—'}</td>
+          <td>${escapeHtml(r.cod_inema) || '—'}</td>
+          <td>
+            <div class="pct-bar-track"><div class="pct-bar-fill ${pctClass(r.pct)}" style="width:${r.pct}%"></div></div>
+            <span>${r.pct}%</span>
+          </td>
+          <td>${r.received} / ${r.expected}</td>
+          <td>${r.total_messages}</td>
+        </tr>`).join('');
+
+      tableWrapCov.innerHTML = `
+        <div class="table-scroll"><table>
+          <thead>
+            <tr>
+              <th>Endereço</th>
+              <th>Estação</th>
+              <th>Município</th>
+              <th>Cód INEMA</th>
+              <th>% Transmissão</th>
+              <th>Recebidas / Esperadas</th>
+              <th>Total msgs</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      `;
+    }
+  } catch (e) {
+    if (aborting || e.name === 'AbortError') {
+      errorBoxCov.textContent = 'Consulta interrompida.';
+    } else {
+      errorBoxCov.textContent = 'Falha de rede ao contatar o servidor local: ' + e.message;
+    }
+    errorBoxCov.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Calcular percentual';
+    btn.style.display = 'block';
+    stopBtn.style.display = 'none';
+  }
+});
+
+runBtn.addEventListener('click', async () => {
+  errorBox.style.display = 'none';
+
+  const addresses = document.getElementById('addresses').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  const requestId = (crypto.randomUUID ? crypto.randomUUID() : 'req-' + Date.now() + '-' + Math.random());
+
+  const payload = {
+    host: document.getElementById('host').value.trim(),
+    port: parseInt(document.getElementById('port').value, 10) || 16003,
+    username: document.getElementById('username').value.trim(),
+    password: document.getElementById('password').value,
+    dcp_addresses: addresses,
+    lookback_hours: parseFloat(document.getElementById('lookback').value) || 48,
+    threshold_hours: parseFloat(document.getElementById('threshold').value) || 6,
+    request_id: requestId,
+  };
+
+  const controller = new AbortController();
+  const stopBtn = document.getElementById('stopBtn');
+  runBtn.disabled = true;
+  runBtn.textContent = 'Consultando...';
+  runBtn.style.display = 'none';
+  stopBtn.style.display = 'block';
+  let aborting = false;
+
+  const onStop = async () => {
+    aborting = true;
+    stopBtn.disabled = true;
+    stopBtn.textContent = 'Parando...';
+    controller.abort();
+    try {
+      await fetch('/api/abort', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id: requestId }),
+      });
+    } catch (e) { /* ignora */ }
+  };
+  stopBtn.disabled = false;
+  stopBtn.textContent = 'Parar consulta';
+  stopBtn.onclick = onStop;
+
+  try {
+    const resp = await fetch('/api/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      errorBox.textContent = data.error || 'Erro desconhecido.';
+      errorBox.style.display = 'block';
+    } else {
+      render(data);
+    }
+  } catch (e) {
+    if (aborting || e.name === 'AbortError') {
+      errorBox.textContent = 'Consulta interrompida.';
+    } else {
+      errorBox.textContent = 'Falha de rede ao contatar o servidor local: ' + e.message;
+    }
+    errorBox.style.display = 'block';
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = 'Consultar plataformas';
+    runBtn.style.display = 'block';
+    stopBtn.style.display = 'none';
+  }
+});
+
+// ---------- Categorias (adicionar PCDs por tipo) ----------
+let categoriesCache = null;
+
+async function ensureCategoriesCache() {
+  if (!categoriesCache) {
+    const resp = await fetch('/api/categories');
+    categoriesCache = await resp.json();
+  }
+  return categoriesCache;
+}
+
+async function loadCategoriesInto(selectId) {
+  const cats = await ensureCategoriesCache();
+  const select = document.getElementById(selectId);
+  select.innerHTML = Object.entries(cats)
+    .map(([name, addrs]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (${addrs.length})</option>`)
+    .join('');
+}
+loadCategoriesInto('categorySelect1');
+loadCategoriesInto('categorySelect2');
+
+async function addCategoryInto(selectId, textareaId) {
+  const cats = await ensureCategoriesCache();
+  const select = document.getElementById(selectId);
+  const textarea = document.getElementById(textareaId);
+  const chosen = select.value;
+  if (!chosen || !cats[chosen]) return;
+
+  const current = new Set(textarea.value.split('\n').map(s => s.trim()).filter(Boolean));
+  cats[chosen].forEach(addr => current.add(addr));
+  textarea.value = Array.from(current).join('\n');
+}
+
+document.getElementById('addCategoryBtn1').addEventListener('click', () => addCategoryInto('categorySelect1', 'addresses'));
+document.getElementById('addCategoryBtn2').addEventListener('click', () => addCategoryInto('categorySelect2', 'addresses2'));
+
+document.getElementById('clearAddressesBtn1').addEventListener('click', () => { document.getElementById('addresses').value = ''; });
+document.getElementById('clearAddressesBtn2').addEventListener('click', () => { document.getElementById('addresses2').value = ''; });
+
+// ---------- Aba 4: Teste de campo ----------
+const ftStationSelect = document.getElementById('ftStationSelect');
+const ftManualAddress = document.getElementById('ftManualAddress');
+const ftErrorBox = document.getElementById('ftErrorBox');
+const ftResultWrap = document.getElementById('ftResultWrap');
+const ftRunBtn = document.getElementById('ftRunBtn');
+const ftStopBtn = document.getElementById('ftStopBtn');
+
+let ftStationsLoaded = false;
+async function loadFieldTestStations() {
+  if (ftStationsLoaded) return;
+  ftStationsLoaded = true;
+  const resp = await fetch('/api/stations');
+  const stations = await resp.json();
+  const options = stations
+    .slice()
+    .sort((a, b) => (a.label || '').localeCompare(b.label || ''))
+    .map(s => `<option value="${escapeHtml(s.address)}">${escapeHtml(s.label || s.address)}</option>`)
+    .join('');
+  ftStationSelect.innerHTML = '<option value="">— selecione uma estação —</option>' + options;
+}
+document.querySelector('.tab-btn[data-tab="fieldtest"]').addEventListener('click', loadFieldTestStations);
+
+function fmtFtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toISOString().replace('T', ' ').substring(0, 19) + 'Z';
+}
+
+function renderFieldTestResult(data) {
+  const pass = data.found;
+  const icon = pass ? '✓' : '✗';
+  const title = pass ? 'Estação transmitindo' : 'Sem transmissão no período testado';
+  const sub = pass
+    ? `${data.message_count} mensagem(ns) encontrada(s) nas últimas ${data.lookback_hours}h · última há ${fmtAge(data.last_message.age_hours)}`
+    : `Nenhuma mensagem encontrada nas últimas ${data.lookback_hours}h`;
+
+  const stationName = data.nome_estacao || (data.known_station ? '—' : '(endereço não cadastrado na base local)');
+
+  let infoGrid = `
+    <div class="ft-info-grid">
+      <div class="ft-info-item"><div class="k">Endereço</div><div class="v">${escapeHtml(data.address)}</div></div>
+      <div class="ft-info-item"><div class="k">Estação</div><div class="v">${escapeHtml(stationName)}</div></div>
+      <div class="ft-info-item"><div class="k">Município</div><div class="v">${escapeHtml(data.municipio) || '—'}</div></div>
+      <div class="ft-info-item"><div class="k">Cód INEMA</div><div class="v">${escapeHtml(data.cod_inema) || '—'}</div></div>
+      <div class="ft-info-item"><div class="k">Categoria</div><div class="v">${escapeHtml(data.categoria) || '—'}</div></div>
+      <div class="ft-info-item"><div class="k">Testado em (UTC)</div><div class="v">${fmtFtTime(data.tested_at)}</div></div>
+    </div>`;
+
+  let historyTable = '';
+  if (data.messages && data.messages.length > 0) {
+    const rows = data.messages.map(m => `
+      <tr>
+        <td>${fmtFtTime(m.timestamp)}</td>
+        <td>${fmtAge(m.age_hours)}</td>
+        <td>${m.data_quality_desc || '—'}</td>
+        <td>${m.signal_strength ? m.signal_strength + ' dBm*' : '—'}</td>
+        <td>${m.channel ? m.channel + (m.spacecraft || '') : '—'}</td>
+        <td class="data-cell">${escapeHtml(m.data_text) || '—'}</td>
+      </tr>`).join('');
+
+    historyTable = `
+      <h2 style="margin:8px 0 12px;">Histórico de mensagens</h2>
+      <div class="table-scroll"><table>
+        <thead>
+          <tr>
+            <th>Horário (UTC)</th>
+            <th>Há quanto tempo</th>
+            <th>Qualidade</th>
+            <th>Sinal</th>
+            <th>Canal</th>
+            <th>Dados transmitidos</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+  }
+
+  ftResultWrap.innerHTML = `
+    <div class="ft-status-card ${pass ? 'pass' : 'fail'}">
+      <div class="ft-status-icon">${icon}</div>
+      <div>
+        <div class="ft-status-title">${title}</div>
+        <div class="ft-status-sub">${sub}</div>
+      </div>
+    </div>
+    ${infoGrid}
+    ${historyTable}
+  `;
+}
+
+ftRunBtn.addEventListener('click', async () => {
+  ftErrorBox.style.display = 'none';
+
+  const manual = ftManualAddress.value.trim().toUpperCase();
+  const address = manual || ftStationSelect.value;
+
+  if (!address) {
+    ftErrorBox.textContent = 'Selecione uma estação da lista ou digite um endereço.';
+    ftErrorBox.style.display = 'block';
+    return;
+  }
+  if (!/^[0-9A-F]{8}$/.test(address)) {
+    ftErrorBox.textContent = 'Endereço inválido — precisa ser hexadecimal de 8 dígitos (ex: B0405296).';
+    ftErrorBox.style.display = 'block';
+    return;
+  }
+
+  const requestId = (crypto.randomUUID ? crypto.randomUUID() : 'req-' + Date.now() + '-' + Math.random());
+  const payload = {
+    host: document.getElementById('host3').value.trim(),
+    port: parseInt(document.getElementById('port3').value, 10) || 16003,
+    username: document.getElementById('username3').value.trim(),
+    password: document.getElementById('password3').value,
+    address: address,
+    lookback_hours: parseFloat(document.getElementById('ftLookback').value) || 48,
+    request_id: requestId,
+  };
+
+  const controller = new AbortController();
+  ftRunBtn.disabled = true;
+  ftRunBtn.textContent = 'Testando...';
+  ftRunBtn.style.display = 'none';
+  ftStopBtn.style.display = 'block';
+  let aborting = false;
+
+  const onStop = async () => {
+    aborting = true;
+    ftStopBtn.disabled = true;
+    ftStopBtn.textContent = 'Parando...';
+    controller.abort();
+    try {
+      await fetch('/api/abort', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id: requestId }),
+      });
+    } catch (e) { /* ignora */ }
+  };
+  ftStopBtn.disabled = false;
+  ftStopBtn.textContent = 'Parar teste';
+  ftStopBtn.onclick = onStop;
+
+  try {
+    const resp = await fetch('/api/fieldtest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      ftErrorBox.textContent = data.error || 'Erro desconhecido.';
+      ftErrorBox.style.display = 'block';
+    } else {
+      renderFieldTestResult(data);
+    }
+  } catch (e) {
+    if (aborting || e.name === 'AbortError') {
+      ftErrorBox.textContent = 'Teste interrompido.';
+    } else {
+      ftErrorBox.textContent = 'Falha de rede ao contatar o servidor local: ' + e.message;
+    }
+    ftErrorBox.style.display = 'block';
+  } finally {
+    ftRunBtn.disabled = false;
+    ftRunBtn.textContent = 'Testar estação';
+    ftRunBtn.style.display = 'block';
+    ftStopBtn.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login · Monitor de PCDs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at top, #101b30 0%, #0a0f1a 55%);
+    color: #d7e0ee;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  form {
+    width: 320px;
+    background: linear-gradient(180deg, #111a2b, #0d1524);
+    border: 1px solid #22304a;
+    border-radius: 10px;
+    padding: 28px;
+  }
+  h1 {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #7c8aa3;
+    margin: 0 0 4px;
+  }
+  p.sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #7c8aa3;
+    margin: 0 0 20px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: #7c8aa3;
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    background: #0a1220;
+    border: 1px solid #22304a;
+    border-radius: 6px;
+    color: #d7e0ee;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 10px;
+    outline: none;
+    margin-bottom: 16px;
+  }
+  input:focus { border-color: #ffb020; }
+  button {
+    width: 100%;
+    background: #ffb020;
+    color: #0a0f1a;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .error {
+    color: #ff5d5d;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+<form method="POST" action="/login">
+  <h1>Monitor de PCDs</h1>
+  <p class="sub">Acesso restrito &middot; GOES DCS</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <label for="password">Senha de acesso</label>
+  <input type="password" id="password" name="password" autofocus required>
+  <button type="submit">Entrar</button>
+</form>
+</body>
+</html>

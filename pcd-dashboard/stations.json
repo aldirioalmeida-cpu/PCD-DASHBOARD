@@ -1,0 +1,884 @@
+[
+  {
+    "address": "B04346EE",
+    "label": "45760000 - Correntina - BEBEDOURO",
+    "municipio": "Correntina",
+    "nome_estacao": "BEBEDOURO",
+    "cod_inema": 45760000
+  },
+  {
+    "address": "B0436ED0",
+    "label": "46520000 - BARREIRAS - Rio de pedras",
+    "municipio": "BARREIRAS",
+    "nome_estacao": "Rio de pedras",
+    "cod_inema": 46520000
+  },
+  {
+    "address": "B04039A2",
+    "label": "46770000 - Formosa do Rio Preto - FAZENDA BOM JARDIM",
+    "municipio": "Formosa do Rio Preto",
+    "nome_estacao": "FAZENDA BOM JARDIM",
+    "cod_inema": 46770000
+  },
+  {
+    "address": "B0411366",
+    "label": "50429000 - Capim Grosso - Açude Pedras Altas",
+    "municipio": "Capim Grosso",
+    "nome_estacao": "Açude Pedras Altas",
+    "cod_inema": 50429000
+  },
+  {
+    "address": "B041282E",
+    "label": "50465000 - Queimadas  (CPRM) - Queimadas (CPRM)",
+    "municipio": "Queimadas  (CPRM)",
+    "nome_estacao": "Queimadas (CPRM)",
+    "cod_inema": 50465000
+  },
+  {
+    "address": "B0411DB4",
+    "label": "53130000 - Itaju do Colônia - Itaju do colônia",
+    "municipio": "Itaju do Colônia",
+    "nome_estacao": "Itaju do colônia",
+    "cod_inema": 53130000
+  },
+  {
+    "address": "B04126FC",
+    "label": "53140000 - Itapé - Estiva de Baixo",
+    "municipio": "Itapé",
+    "nome_estacao": "Estiva de Baixo",
+    "cod_inema": 53140000
+  },
+  {
+    "address": "B04188D6",
+    "label": "B04188D6",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B041BD4C",
+    "label": "B041BD4C",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B042F79A",
+    "label": "B042F79A",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B0430B36",
+    "label": "B0430B36",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B0437DA6",
+    "label": "B0437DA6",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B04383F0",
+    "label": "B04383F0",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B0438D22",
+    "label": "B0438D22",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B0439086",
+    "label": "B0439086",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B0439E54",
+    "label": "B0439E54",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043A51C",
+    "label": "B043A51C",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043ABCE",
+    "label": "B043ABCE",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043B66A",
+    "label": "B043B66A",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043B8B8",
+    "label": "B043B8B8",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043C0FA",
+    "label": "B043C0FA",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043CE28",
+    "label": "B043CE28",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043D38C",
+    "label": "B043D38C",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043DD5E",
+    "label": "B043DD5E",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043E616",
+    "label": "B043E616",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B043E8C4",
+    "label": "B043E8C4",
+    "municipio": "",
+    "nome_estacao": "",
+    "cod_inema": ""
+  },
+  {
+    "address": "B04002EA",
+    "label": "CA-CL-01 - Cocos - Santa Luzia",
+    "municipio": "Cocos",
+    "nome_estacao": "Santa Luzia",
+    "cod_inema": "CA-CL-01"
+  },
+  {
+    "address": "B0432DDA",
+    "label": "CA-FR-01 - Cocos - Ponte do Fortunato",
+    "municipio": "Cocos",
+    "nome_estacao": "Ponte do Fortunato",
+    "cod_inema": "CA-FR-01"
+  },
+  {
+    "address": "B0400C38",
+    "label": "CT-CL-02 - Jaborandi - Porta do Céu",
+    "municipio": "Jaborandi",
+    "nome_estacao": "Porta do Céu",
+    "cod_inema": "CT-CL-02"
+  },
+  {
+    "address": "B040119C",
+    "label": "CT-CL-03 - Correntina - Fazenda Morinaga",
+    "municipio": "Correntina",
+    "nome_estacao": "Fazenda Morinaga",
+    "cod_inema": "CT-CL-03"
+  },
+  {
+    "address": "B0435598",
+    "label": "CT-FR-01 - Correntina - Fazenda Morete",
+    "municipio": "Correntina",
+    "nome_estacao": "Fazenda Morete",
+    "cod_inema": "CT-FR-01"
+  },
+  {
+    "address": "B0433EAC",
+    "label": "CT-FR-03 - Jaborandi - Fazenda Nova Esperança",
+    "municipio": "Jaborandi",
+    "nome_estacao": "Fazenda Nova Esperança",
+    "cod_inema": "CT-FR-03"
+  },
+  {
+    "address": "B043307E",
+    "label": "CT-FR-08 - Cocos - Faz. Lagoa do Casamento",
+    "municipio": "Cocos",
+    "nome_estacao": "Faz. Lagoa do Casamento",
+    "cod_inema": "CT-FR-08"
+  },
+  {
+    "address": "B043483C",
+    "label": "CT-FR-09 - Correntina - Rio Arrojado",
+    "municipio": "Correntina",
+    "nome_estacao": "Rio Arrojado",
+    "cod_inema": "CT-FR-09"
+  },
+  {
+    "address": "B0402AD4",
+    "label": "GR-CL-03 - Formosa do Rio Preto/Riachão das Neves - Fazenda Barcelona",
+    "municipio": "Formosa do Rio Preto/Riachão das Neves",
+    "nome_estacao": "Fazenda Barcelona",
+    "cod_inema": "GR-CL-03"
+  },
+  {
+    "address": "B0402406",
+    "label": "GR-CL-04 - Riachão das Neves - Fazenda Madras",
+    "municipio": "Riachão das Neves",
+    "nome_estacao": "Fazenda Madras",
+    "cod_inema": "GR-CL-04"
+  },
+  {
+    "address": "B0401F4E",
+    "label": "GR-CL-05 - São Desidério - Fazenda Decisão",
+    "municipio": "São Desidério",
+    "nome_estacao": "Fazenda Decisão",
+    "cod_inema": "GR-CL-05"
+  },
+  {
+    "address": "B04041E0",
+    "label": "GR-FR-03 - Formosa do Rio Preto - Buritizinho",
+    "municipio": "Formosa do Rio Preto",
+    "nome_estacao": "Buritizinho",
+    "cod_inema": "GR-FR-03"
+  },
+  {
+    "address": "B0436002",
+    "label": "GR-FR-14 - São Desidério - Ponte do Mosquito",
+    "municipio": "São Desidério",
+    "nome_estacao": "Ponte do Mosquito",
+    "cod_inema": "GR-FR-14"
+  },
+  {
+    "address": "B0435B4A",
+    "label": "GR-FR-20 - São Desidério - Fazenda Vereda Nova",
+    "municipio": "São Desidério",
+    "nome_estacao": "Fazenda Vereda Nova",
+    "cod_inema": "GR-FR-20"
+  },
+  {
+    "address": "B0403770",
+    "label": "GR-FR-23 - Luís Eduardo Magalhães - Vale do Urso",
+    "municipio": "Luís Eduardo Magalhães",
+    "nome_estacao": "Vale do Urso",
+    "cod_inema": "GR-FR-23"
+  },
+  {
+    "address": "B040747A",
+    "label": "IT-CL-01 - Aporá - Povoado de Estiva",
+    "municipio": "Aporá",
+    "nome_estacao": "Povoado de Estiva",
+    "cod_inema": "IT-CL-01"
+  },
+  {
+    "address": "B040995A",
+    "label": "IT-CL-02 - Campo Formoso - Campo Formoso-Fazenda Mandacaru",
+    "municipio": "Campo Formoso",
+    "nome_estacao": "Campo Formoso-Fazenda Mandacaru",
+    "cod_inema": "IT-CL-02"
+  },
+  {
+    "address": "B0405296",
+    "label": "IT-CL-03 - Capim Grosso - Fazenda Sossego",
+    "municipio": "Capim Grosso",
+    "nome_estacao": "Fazenda Sossego",
+    "cod_inema": "IT-CL-03"
+  },
+  {
+    "address": "B040E118",
+    "label": "IT-CL-04 - Saúde - Fazenda São Sebastião",
+    "municipio": "Saúde",
+    "nome_estacao": "Fazenda São Sebastião",
+    "cod_inema": "IT-CL-04"
+  },
+  {
+    "address": "B040C926",
+    "label": "IT-CL-05 - Tucano - Caldas do Jorro",
+    "municipio": "Tucano",
+    "nome_estacao": "Caldas do Jorro",
+    "cod_inema": "IT-CL-05"
+  },
+  {
+    "address": "B0410010",
+    "label": "IT-FR-13 - Pindobaçu - Fazenda Grutinha",
+    "municipio": "Pindobaçu",
+    "nome_estacao": "Fazenda Grutinha",
+    "cod_inema": "IT-FR-13"
+  },
+  {
+    "address": "B040FCBC",
+    "label": "IT-FR-19 - Saúde - Fazenda Porteira",
+    "municipio": "Saúde",
+    "nome_estacao": "Fazenda Porteira",
+    "cod_inema": "IT-FR-19"
+  },
+  {
+    "address": "B040F26E",
+    "label": "IT-FR-21 - Filadélfia - Fazenda Alecrim",
+    "municipio": "Filadélfia",
+    "nome_estacao": "Fazenda Alecrim",
+    "cod_inema": "IT-FR-21"
+  },
+  {
+    "address": "B0410EC2",
+    "label": "IT-FR-23 - Ponto Novo - Açude Ponto Novo - Barragem",
+    "municipio": "Ponto Novo",
+    "nome_estacao": "Açude Ponto Novo - Barragem",
+    "cod_inema": "IT-FR-23"
+  },
+  {
+    "address": "B0418604",
+    "label": "IT-FR-24 - Cipó - Cipó",
+    "municipio": "Cipó",
+    "nome_estacao": "Cipó",
+    "cod_inema": "IT-FR-24"
+  },
+  {
+    "address": "B041E3E2",
+    "label": "IT-PR-01 - Ribeira do Pombal - Curral Falso",
+    "municipio": "Ribeira do Pombal",
+    "nome_estacao": "Curral Falso",
+    "cod_inema": "IT-PR-01"
+  },
+  {
+    "address": "B041ED30",
+    "label": "IT-PR-02 - Euclides da Cunha - Aribicé",
+    "municipio": "Euclides da Cunha",
+    "nome_estacao": "Aribicé",
+    "cod_inema": "IT-PR-02"
+  },
+  {
+    "address": "B041CBDC",
+    "label": "IT-PR-05 - BR116 - E. da Cunha - BR116 - E. da Cunha- Quinjingue",
+    "municipio": "BR116 - E. da Cunha",
+    "nome_estacao": "BR116 - E. da Cunha- Quinjingue",
+    "cod_inema": "IT-PR-05"
+  },
+  {
+    "address": "B041C50E",
+    "label": "IT-PR-06 - Faz. Santo Antonio - Faz. Santo Antonio",
+    "municipio": "Faz. Santo Antonio",
+    "nome_estacao": "Faz. Santo Antonio",
+    "cod_inema": "IT-PR-06"
+  },
+  {
+    "address": "B0424AC6",
+    "label": "IT-PR-10 - Nova Soure - Estação Experimental",
+    "municipio": "Nova Soure",
+    "nome_estacao": "Estação Experimental",
+    "cod_inema": "IT-PR-10"
+  },
+  {
+    "address": "B041D8AA",
+    "label": "IT-PR-13 - Ribeira do Amparo - Boa Hora",
+    "municipio": "Ribeira do Amparo",
+    "nome_estacao": "Boa Hora",
+    "cod_inema": "IT-PR-13"
+  },
+  {
+    "address": "B041FE46",
+    "label": "IT-PR-15 - Queimadas - Riacho da Onça",
+    "municipio": "Queimadas",
+    "nome_estacao": "Riacho da Onça",
+    "cod_inema": "IT-PR-15"
+  },
+  {
+    "address": "B041AE3A",
+    "label": "IT-PR-16 - Queimadas - Rio do Peixe",
+    "municipio": "Queimadas",
+    "nome_estacao": "Rio do Peixe",
+    "cod_inema": "IT-PR-16"
+  },
+  {
+    "address": "B041A0E8",
+    "label": "IT-PR-18 - Boa Vista - Uauá- Fazenda Boa Vista",
+    "municipio": "Boa Vista",
+    "nome_estacao": "Uauá- Fazenda Boa Vista",
+    "cod_inema": "IT-PR-18"
+  },
+  {
+    "address": "B041B39E",
+    "label": "IT-PR-20 - Cansanção - Cansanção",
+    "municipio": "Cansanção",
+    "nome_estacao": "Cansanção",
+    "cod_inema": "IT-PR-20"
+  },
+  {
+    "address": "B041F094",
+    "label": "IT-PR-25 - Quinjingue - Quinjingue",
+    "municipio": "Quinjingue",
+    "nome_estacao": "Quinjingue",
+    "cod_inema": "IT-PR-25"
+  },
+  {
+    "address": "B04209CC",
+    "label": "IT-PR-34 - Jacobina - Itapeipu",
+    "municipio": "Jacobina",
+    "nome_estacao": "Itapeipu",
+    "cod_inema": "IT-PR-34"
+  },
+  {
+    "address": "B0421468",
+    "label": "IT-PR-36 - Jacobina - Tombador Araujo",
+    "municipio": "Jacobina",
+    "nome_estacao": "Tombador Araujo",
+    "cod_inema": "IT-PR-36"
+  },
+  {
+    "address": "B0419572",
+    "label": "IT-PR-37 - Carrapichel - Senhor do Bonfim- Carrapichel",
+    "municipio": "Carrapichel",
+    "nome_estacao": "Senhor do Bonfim- Carrapichel",
+    "cod_inema": "IT-PR-37"
+  },
+  {
+    "address": "B042DFA4",
+    "label": "LE-CL-01 - Ilhéus - Ilhéus- CPLAC",
+    "municipio": "Ilhéus",
+    "nome_estacao": "Ilhéus- CPLAC",
+    "cod_inema": "LE-CL-01"
+  },
+  {
+    "address": "B0428FD8",
+    "label": "LE-CL-02 - Jussari - CPLAC-CEPEC",
+    "municipio": "Jussari",
+    "nome_estacao": "CPLAC-CEPEC",
+    "cod_inema": "LE-CL-02"
+  },
+  {
+    "address": "B042927C",
+    "label": "LE-CL-03 - Itororó - Itati",
+    "municipio": "Itororó",
+    "nome_estacao": "Itati",
+    "cod_inema": "LE-CL-03"
+  },
+  {
+    "address": "B0429CAE",
+    "label": "LE-CL-04 - Coaraci - Laticínio Almada",
+    "municipio": "Coaraci",
+    "nome_estacao": "Laticínio Almada",
+    "cod_inema": "LE-CL-04"
+  },
+  {
+    "address": "B0416B24",
+    "label": "LE-FR-02 - Una - Fazenda Valmonte",
+    "municipio": "Una",
+    "nome_estacao": "Fazenda Valmonte",
+    "cod_inema": "LE-FR-02"
+  },
+  {
+    "address": "B0417680",
+    "label": "LE-PR-02 - Floresta Azul - Fazenda Idaiá",
+    "municipio": "Floresta Azul",
+    "nome_estacao": "Fazenda Idaiá",
+    "cod_inema": "LE-PR-02"
+  },
+  {
+    "address": "B0437374",
+    "label": "LE-PR-03 - Uruçuca - Parque Serra do Conduru",
+    "municipio": "Uruçuca",
+    "nome_estacao": "Parque Serra do Conduru",
+    "cod_inema": "LE-PR-03"
+  },
+  {
+    "address": "B042B490",
+    "label": "LE-PR-04 - Buerarema - Haras Aguiar",
+    "municipio": "Buerarema",
+    "nome_estacao": "Haras Aguiar",
+    "cod_inema": "LE-PR-04"
+  },
+  {
+    "address": "B042D176",
+    "label": "LE-PR-05 - Almadina - Fazenda Canada",
+    "municipio": "Almadina",
+    "nome_estacao": "Fazenda Canada",
+    "cod_inema": "LE-PR-05"
+  },
+  {
+    "address": "B0404F32",
+    "label": "LE-PR-06 - Firmino Alves - Fazenda Boa Esperança",
+    "municipio": "Firmino Alves",
+    "nome_estacao": "Fazenda Boa Esperança",
+    "cod_inema": "LE-PR-06"
+  },
+  {
+    "address": "B042E4EC",
+    "label": "PG-CL-01 - Mundo Novo - Mundo Novo-Ibiaporã",
+    "municipio": "Mundo Novo",
+    "nome_estacao": "Mundo Novo-Ibiaporã",
+    "cod_inema": "PG-CL-01"
+  },
+  {
+    "address": "B042EA3E",
+    "label": "PG-CL-02 - Ipirá - Ipirá",
+    "municipio": "Ipirá",
+    "nome_estacao": "Ipirá",
+    "cod_inema": "PG-CL-02"
+  },
+  {
+    "address": "B042F948",
+    "label": "PG-CL-04 - Souto Soares - Souto Soares",
+    "municipio": "Souto Soares",
+    "nome_estacao": "Souto Soares",
+    "cod_inema": "PG-CL-04"
+  },
+  {
+    "address": "B040ACC0",
+    "label": "PG-CL-05 - Iaçu - São João do Faustino",
+    "municipio": "Iaçu",
+    "nome_estacao": "São João do Faustino",
+    "cod_inema": "PG-CL-05"
+  },
+  {
+    "address": "B0405C44",
+    "label": "PG-CL-06 - Maragogipe - Centro E de Educação Profissional",
+    "municipio": "Maragogipe",
+    "nome_estacao": "Centro E de Educação Profissional",
+    "cod_inema": "PG-CL-06"
+  },
+  {
+    "address": "B040A212",
+    "label": "PG-CL-07 - Pé de Serra - Pé de Serra-Lagoa do Curral",
+    "municipio": "Pé de Serra",
+    "nome_estacao": "Pé de Serra-Lagoa do Curral",
+    "cod_inema": "PG-CL-07"
+  },
+  {
+    "address": "B0409788",
+    "label": "PG-CL-09 - Seabra - Campus IFBA",
+    "municipio": "Seabra",
+    "nome_estacao": "Campus IFBA",
+    "cod_inema": "PG-CL-09"
+  },
+  {
+    "address": "B040EFCA",
+    "label": "PG-CL-10 - Várzea do Poço - Comunidade Lajinha",
+    "municipio": "Várzea do Poço",
+    "nome_estacao": "Comunidade Lajinha",
+    "cod_inema": "PG-CL-10"
+  },
+  {
+    "address": "B042A7E6",
+    "label": "PG-CL-11 - Itaetê - Baixão",
+    "municipio": "Itaetê",
+    "nome_estacao": "Baixão",
+    "cod_inema": "PG-CL-11"
+  },
+  {
+    "address": "B042A934",
+    "label": "PG-CL-12 - Rafael Jambeiro - Argoim",
+    "municipio": "Rafael Jambeiro",
+    "nome_estacao": "Argoim",
+    "cod_inema": "PG-CL-12"
+  },
+  {
+    "address": "B041431A",
+    "label": "PG-FR-01 - Lençóis - BR-242",
+    "municipio": "Lençóis",
+    "nome_estacao": "BR-242",
+    "cod_inema": "PG-FR-01"
+  },
+  {
+    "address": "B0414DC8",
+    "label": "PG-FR-02 - Lençóis - Santo Antônio/Porto",
+    "municipio": "Lençóis",
+    "nome_estacao": "Santo Antônio/Porto",
+    "cod_inema": "PG-FR-02"
+  },
+  {
+    "address": "B0413B58",
+    "label": "PG-FR-04 - Wagner - Fazenda Terra Grapiúna",
+    "municipio": "Wagner",
+    "nome_estacao": "Fazenda Terra Grapiúna",
+    "cod_inema": "PG-FR-04"
+  },
+  {
+    "address": "B04165F6",
+    "label": "PG-FR-18 - Itaetê - Fazenda Bandeira de Melo",
+    "municipio": "Itaetê",
+    "nome_estacao": "Fazenda Bandeira de Melo",
+    "cod_inema": "PG-FR-18"
+  },
+  {
+    "address": "B0415EBE",
+    "label": "PG-FR-19 - Itaetê - Fazenda Iguaçu",
+    "municipio": "Itaetê",
+    "nome_estacao": "Fazenda Iguaçu",
+    "cod_inema": "PG-FR-19"
+  },
+  {
+    "address": "B041506C",
+    "label": "PG-FR-20 - Mucugê - Usina Mucugê",
+    "municipio": "Mucugê",
+    "nome_estacao": "Usina Mucugê",
+    "cod_inema": "PG-FR-20"
+  },
+  {
+    "address": "B041358A",
+    "label": "PG-FR-21 - Morro do  Chapéu - Morro do  Chapéu",
+    "municipio": "Morro do  Chapéu",
+    "nome_estacao": "Morro do  Chapéu",
+    "cod_inema": "PG-FR-21"
+  },
+  {
+    "address": "B042071E",
+    "label": "PG-PR-05 - Pintadas - Pintadas",
+    "municipio": "Pintadas",
+    "nome_estacao": "Pintadas",
+    "cod_inema": "PG-PR-05"
+  },
+  {
+    "address": "B0421ABA",
+    "label": "PG-PR-10 - Morro do  Chapéu - Ventura",
+    "municipio": "Morro do  Chapéu",
+    "nome_estacao": "Ventura",
+    "cod_inema": "PG-PR-10"
+  },
+  {
+    "address": "B04259B0",
+    "label": "PG-PR-15 - Iacú - Lagoa Bonita",
+    "municipio": "Iacú",
+    "nome_estacao": "Lagoa Bonita",
+    "cod_inema": "PG-PR-15"
+  },
+  {
+    "address": "B041D678",
+    "label": "PG-PR-16 - João Amaro - João Amaro",
+    "municipio": "João Amaro",
+    "nome_estacao": "João Amaro",
+    "cod_inema": "PG-PR-16"
+  },
+  {
+    "address": "B0422F20",
+    "label": "PG-PR-20 - Piatã - Fazenda Cruz",
+    "municipio": "Piatã",
+    "nome_estacao": "Fazenda Cruz",
+    "cod_inema": "PG-PR-20"
+  },
+  {
+    "address": "B04221F2",
+    "label": "PG-PR-21 - Iraquara - Afrânio Peixoto",
+    "municipio": "Iraquara",
+    "nome_estacao": "Afrânio Peixoto",
+    "cod_inema": "PG-PR-21"
+  },
+  {
+    "address": "B0423284",
+    "label": "PG-PR-24 - Mucugê - Guiné",
+    "municipio": "Mucugê",
+    "nome_estacao": "Guiné",
+    "cod_inema": "PG-PR-24"
+  },
+  {
+    "address": "B0425762",
+    "label": "PG-PR-26 - Marcionílio Souza - Machado Portela",
+    "municipio": "Marcionílio Souza",
+    "nome_estacao": "Machado Portela",
+    "cod_inema": "PG-PR-26"
+  },
+  {
+    "address": "B0423C56",
+    "label": "PG-PR-28 - Mucugê - Mucugê - Apertado",
+    "municipio": "Mucugê",
+    "nome_estacao": "Mucugê - Apertado",
+    "cod_inema": "PG-PR-28"
+  },
+  {
+    "address": "B0408A2C",
+    "label": "PM-CL-02 - Macaúbas - Escola Família Agrícola",
+    "municipio": "Macaúbas",
+    "nome_estacao": "Escola Família Agrícola",
+    "cod_inema": "PM-CL-02"
+  },
+  {
+    "address": "B04069DE",
+    "label": "PM-CL-03 - Paratinga - Povoado de Volta da Serra",
+    "municipio": "Paratinga",
+    "nome_estacao": "Povoado de Volta da Serra",
+    "cod_inema": "PM-CL-03"
+  },
+  {
+    "address": "B04084FE",
+    "label": "PM-CL-04 - Rio do Pires - EMBASA- Estação de Tratamento de Água",
+    "municipio": "Rio do Pires",
+    "nome_estacao": "EMBASA- Estação de Tratamento de Água",
+    "cod_inema": "PM-CL-04"
+  },
+  {
+    "address": "B040BFB6",
+    "label": "PM-CL-05 - Xique-Xique - Campus IFBaiano",
+    "municipio": "Xique-Xique",
+    "nome_estacao": "Campus IFBaiano",
+    "cod_inema": "PM-CL-05"
+  },
+  {
+    "address": "B0424414",
+    "label": "PM-PR-02 - Paramirim - Zabumbão",
+    "municipio": "Paramirim",
+    "nome_estacao": "Zabumbão",
+    "cod_inema": "PM-PR-02"
+  },
+  {
+    "address": "B042BA42",
+    "label": "RN-CL-03 - Amélia Rodrigues - Fazenda Campos",
+    "municipio": "Amélia Rodrigues",
+    "nome_estacao": "Fazenda Campos",
+    "cod_inema": "RN-CL-03"
+  },
+  {
+    "address": "B042C200",
+    "label": "RN-CL-04 - Mata de São João - Colonia Japonesa",
+    "municipio": "Mata de São João",
+    "nome_estacao": "Colonia Japonesa",
+    "cod_inema": "RN-CL-04"
+  },
+  {
+    "address": "B042CCD2",
+    "label": "RN-CL-05 - Salvador (Abaeté) - Salvador (Abaeté)",
+    "municipio": "Salvador (Abaeté)",
+    "nome_estacao": "Salvador (Abaeté)",
+    "cod_inema": "RN-CL-05"
+  },
+  {
+    "address": "B04305E4",
+    "label": "RN-CL-07 - São Francisco do Conde - São Francisco do Conde",
+    "municipio": "São Francisco do Conde",
+    "nome_estacao": "São Francisco do Conde",
+    "cod_inema": "RN-CL-07"
+  },
+  {
+    "address": "B0431692",
+    "label": "RN-CL-09 - Lauro de Freitas - Lauro de Freitas",
+    "municipio": "Lauro de Freitas",
+    "nome_estacao": "Lauro de Freitas",
+    "cod_inema": "RN-CL-09"
+  },
+  {
+    "address": "B0431840",
+    "label": "RN-CL-10 - Inhambupe - Inhambupe",
+    "municipio": "Inhambupe",
+    "nome_estacao": "Inhambupe",
+    "cod_inema": "RN-CL-10"
+  },
+  {
+    "address": "B0432308",
+    "label": "RS-CL-02 - Milagres - Milagres",
+    "municipio": "Milagres",
+    "nome_estacao": "Milagres",
+    "cod_inema": "RS-CL-02"
+  },
+  {
+    "address": "B0407AA8",
+    "label": "SA-CL-01 - Juazeiro - Esctirório da Codevasf- Salitre",
+    "municipio": "Juazeiro",
+    "nome_estacao": "Esctirório da Codevasf- Salitre",
+    "cod_inema": "SA-CL-01"
+  },
+  {
+    "address": "B040670C",
+    "label": "SA-CL-02 - Várzea Nova - ETE Embasa",
+    "municipio": "Várzea Nova",
+    "nome_estacao": "ETE Embasa",
+    "cod_inema": "SA-CL-02"
+  },
+  {
+    "address": "B0419BA0",
+    "label": "SM-PR-01 - Jaguarari/Santa Rosa - Jaguarari/Santa Rosa",
+    "municipio": "Jaguarari/Santa Rosa",
+    "nome_estacao": "Jaguarari/Santa Rosa",
+    "cod_inema": "SM-PR-01"
+  },
+  {
+    "address": "B042718E",
+    "label": "UMR-BCA-001 - Aipim - Barragem do Aipim",
+    "municipio": "Aipim",
+    "nome_estacao": "Barragem do Aipim",
+    "cod_inema": "UMR-BCA-001"
+  },
+  {
+    "address": "B04262F8",
+    "label": "UMR-BPA-001 - Pedras Altas - Barragem de Pedras Altas",
+    "municipio": "Pedras Altas",
+    "nome_estacao": "Barragem de Pedras Altas",
+    "cod_inema": "UMR-BPA-001"
+  },
+  {
+    "address": "B0426C2A",
+    "label": "UMR-BPI-001 - Pindobaçu - Barragem de Pindobaçu",
+    "municipio": "Pindobaçu",
+    "nome_estacao": "Barragem de Pindobaçu",
+    "cod_inema": "UMR-BPI-001"
+  },
+  {
+    "address": "B0427F5C",
+    "label": "UMR-BPN-001 - Ponto Novo - Barragem de Ponto Novo",
+    "municipio": "Ponto Novo",
+    "nome_estacao": "Barragem de Ponto Novo",
+    "cod_inema": "UMR-BPN-001"
+  },
+  {
+    "address": "B042810A",
+    "label": "UMR-BSJ-001 - São José - Barragem de São José",
+    "municipio": "São José",
+    "nome_estacao": "Barragem de São José",
+    "cod_inema": "UMR-BSJ-001"
+  },
+  {
+    "address": "B040B164",
+    "label": "UMR-JOA-001 - Lauro de Freitas - Barragem de Joanes I",
+    "municipio": "Lauro de Freitas",
+    "nome_estacao": "Barragem de Joanes I",
+    "cod_inema": "UMR-JOA-001"
+  },
+  {
+    "address": "B040DA50",
+    "label": "VJ-CL-02 - Ibipeba - Fazenda Baixa Verde- Baixa Funda",
+    "municipio": "Ibipeba",
+    "nome_estacao": "Fazenda Baixa Verde- Baixa Funda",
+    "cod_inema": "VJ-CL-02"
+  },
+  {
+    "address": "B040D482",
+    "label": "VJ-CL-03 - Itaguaçu da Bahia - Faz AGROBASA- Povoado Rio Verde",
+    "municipio": "Itaguaçu da Bahia",
+    "nome_estacao": "Faz AGROBASA- Povoado Rio Verde",
+    "cod_inema": "VJ-CL-03"
+  },
+  {
+    "address": "B040C7F4",
+    "label": "VJ-CL-04 - Sento Sé - Fazenda Alecrim",
+    "municipio": "Sento Sé",
+    "nome_estacao": "Fazenda Alecrim",
+    "cod_inema": "VJ-CL-04"
+  },
+  {
+    "address": "B0417852",
+    "label": "VJ-FR-01 - Gentio do Ouro - Fazenda Água Quente",
+    "municipio": "Gentio do Ouro",
+    "nome_estacao": "Fazenda Água Quente",
+    "cod_inema": "VJ-FR-01"
+  }
+]
