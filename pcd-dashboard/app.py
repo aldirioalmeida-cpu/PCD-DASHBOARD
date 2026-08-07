@@ -27,12 +27,21 @@ import os
 import re
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
 from dds_client import DdsAbortedError, DdsAuthError, DdsError, DdsSession
+from ftp_client import (
+    FtpAbortedError,
+    FtpClientError,
+    FtpSession,
+    normalize_code,
+    parse_filename_datetime,
+    parse_readings,
+    sort_files_newest_first,
+)
 
 app = Flask(__name__)
 
@@ -46,6 +55,7 @@ APP_PASSWORD = os.environ.get("APP_PASSWORD")
 
 STATIONS_PATH = os.path.join(os.path.dirname(__file__), "stations.json")
 CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), "categories.json")
+STATIONS_FTP_PATH = os.path.join(os.path.dirname(__file__), "stations_ftp.json")
 
 ADDRESS_RE = re.compile(r"^[0-9A-Fa-f]{8}$")
 
@@ -85,6 +95,14 @@ def _load_categories() -> dict:
             return json.load(f)
     except FileNotFoundError:
         return {}
+
+
+def _load_stations_ftp() -> list[dict]:
+    try:
+        with open(STATIONS_FTP_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
 
 
 def _category_of(address: str, categories: dict) -> str | None:
@@ -423,6 +441,245 @@ def api_fieldtest():
         "message_count": len(message_list),
         "last_message": last,
         "messages": message_list,
+    })
+
+
+@app.route("/api/ftp/stations")
+@login_required
+def api_ftp_stations():
+    return jsonify(_load_stations_ftp())
+
+
+@app.route("/api/ftp/browse", methods=["POST"])
+@login_required
+def api_ftp_browse():
+    """Lista os arquivos/pastas de um diretório do FTP — útil pra conferir
+    a estrutura real quando ainda não se conhece (ex: raiz mostra as
+    subpastas por estação; entrando numa subpasta mostra os arquivos)."""
+    payload = request.get_json(force=True, silent=True) or {}
+    host = (payload.get("host") or "").strip()
+    port = int(payload.get("port") or 21)
+    path = (payload.get("path") or "/").strip()
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+
+    if not host:
+        return jsonify({"error": "Informe o host do servidor FTP."}), 400
+    if not username:
+        return jsonify({"error": "Informe o usuário FTP."}), 400
+
+    try:
+        with FtpSession(host, username, password, port=port) as session:
+            entries = session.list_directory(path)
+    except FtpClientError as e:
+        return jsonify({"error": str(e)}), 502
+
+    entries_out = sorted([
+        {
+            "name": e.name,
+            "size": e.size,
+            "mtime": e.mtime.isoformat() if e.mtime else None,
+            "is_dir": e.is_dir,
+            "filename_datetime": parse_filename_datetime(e.name).isoformat() if not e.is_dir and parse_filename_datetime(e.name) else None,
+        }
+        for e in entries
+    ], key=lambda e: (not e["is_dir"], e["name"]))
+
+    return jsonify({"path": path, "count": len(entries_out), "entries": entries_out})
+
+
+def _get_latest_reading_for_station(session: "FtpSession", base_path: str, cod_inema: str,
+                                     folder_entries_by_code: dict, files_to_try: int = 2):
+    """Acha a pasta da estação, pega o(s) arquivo(s) mais recente(s) e
+    devolve a última leitura (Reading) encontrada, ou None."""
+    folder = folder_entries_by_code.get(normalize_code(cod_inema))
+    if folder is None:
+        return None, None  # (reading, folder_name)
+
+    folder_path = base_path.rstrip("/") + "/" + folder.name
+    files = session.list_directory(folder_path)
+    ordered = sort_files_newest_first(files)
+
+    for entry in ordered[:files_to_try]:
+        text = session.fetch_file_text(folder_path, entry.name)
+        readings = parse_readings(text, entry.name)
+        if readings:
+            return max(readings, key=lambda r: r.timestamp_utc), folder.name
+    return None, folder.name
+
+
+@app.route("/api/ftp/status", methods=["POST"])
+@login_required
+def api_ftp_status():
+    payload = request.get_json(force=True, silent=True) or {}
+    host = (payload.get("host") or "").strip()
+    port = int(payload.get("port") or 21)
+    path = (payload.get("path") or "/").strip()
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+    threshold_hours = float(payload.get("threshold_hours") or 6)
+    request_id = payload.get("request_id") or str(uuid.uuid4())
+
+    if not host:
+        return jsonify({"error": "Informe o host do servidor FTP."}), 400
+    if not username:
+        return jsonify({"error": "Informe o usuário FTP."}), 400
+
+    stations = _load_stations_ftp()
+    if not stations:
+        return jsonify({"error": "Nenhuma estação celular cadastrada (stations_ftp.json vazio)."}), 400
+
+    session = FtpSession(host, username, password, port=port)
+    _register_op(request_id, session)
+    try:
+        session.connect()
+        root_entries = session.list_directory(path)
+        folder_by_code = {normalize_code(e.name): e for e in root_entries if e.is_dir}
+
+        now = datetime.now(timezone.utc)
+        results = []
+        for st in stations:
+            reading, folder_name = _get_latest_reading_for_station(session, path, st["cod_inema"], folder_by_code)
+
+            if folder_name is None:
+                status, age_hours, last_transmission, data_text = "sem_transmitir", None, None, None
+            elif reading is None:
+                status, age_hours, last_transmission, data_text = "sem_transmitir", None, None, None
+            else:
+                age_hours = (now - reading.timestamp_utc).total_seconds() / 3600.0
+                status = "sem_transmitir" if age_hours > threshold_hours else "ok"
+                last_transmission = reading.timestamp_utc.isoformat()
+                data_text = reading.raw_line
+
+            results.append({
+                "cod_inema": st["cod_inema"],
+                "nome_estacao": st.get("nome_estacao"),
+                "municipio": st.get("municipio"),
+                "lat": st.get("lat"),
+                "lon": st.get("lon"),
+                "modelo": st.get("modelo"),
+                "pasta_encontrada": folder_name,
+                "last_transmission": last_transmission,
+                "age_hours": round(age_hours, 2) if age_hours is not None else None,
+                "data_text": data_text,
+                "status": status,
+            })
+    except FtpAbortedError:
+        return jsonify({"error": "Consulta interrompida pelo usuário.", "aborted": True}), 499
+    except FtpClientError as e:
+        return jsonify({"error": str(e)}), 502
+    finally:
+        session.close()
+        _unregister_op(request_id)
+
+    results.sort(key=lambda r: (r["age_hours"] is not None, r["age_hours"]), reverse=True)
+
+    return jsonify({
+        "queried_at": now.isoformat(),
+        "threshold_hours": threshold_hours,
+        "results": results,
+    })
+
+
+@app.route("/api/ftp/coverage", methods=["POST"])
+@login_required
+def api_ftp_coverage():
+    payload = request.get_json(force=True, silent=True) or {}
+    host = (payload.get("host") or "").strip()
+    port = int(payload.get("port") or 21)
+    path = (payload.get("path") or "/").strip()
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+    interval_minutes = float(payload.get("interval_minutes") or 10)
+    start_str = payload.get("start")
+    end_str = payload.get("end")
+    request_id = payload.get("request_id") or str(uuid.uuid4())
+
+    if not host:
+        return jsonify({"error": "Informe o host do servidor FTP."}), 400
+    if not username:
+        return jsonify({"error": "Informe o usuário FTP."}), 400
+    if not start_str or not end_str:
+        return jsonify({"error": "Informe o início e o fim do intervalo"}), 400
+
+    try:
+        start_dt = datetime.fromisoformat(start_str).replace(tzinfo=timezone.utc)
+        end_dt = datetime.fromisoformat(end_str).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return jsonify({"error": "Datas em formato inválido"}), 400
+    if end_dt <= start_dt:
+        return jsonify({"error": "O horário final deve ser posterior ao inicial"}), 400
+
+    stations = _load_stations_ftp()
+    if not stations:
+        return jsonify({"error": "Nenhuma estação celular cadastrada (stations_ftp.json vazio)."}), 400
+
+    total_minutes = (end_dt - start_dt).total_seconds() / 60.0
+    expected = max(1, round(total_minutes / interval_minutes))
+
+    session = FtpSession(host, username, password, port=port)
+    _register_op(request_id, session)
+    try:
+        session.connect()
+        root_entries = session.list_directory(path)
+        folder_by_code = {normalize_code(e.name): e for e in root_entries if e.is_dir}
+
+        results = []
+        for st in stations:
+            folder = folder_by_code.get(normalize_code(st["cod_inema"]))
+            if folder is None:
+                results.append({
+                    "cod_inema": st["cod_inema"], "nome_estacao": st.get("nome_estacao"),
+                    "municipio": st.get("municipio"), "expected": expected, "received": 0,
+                    "pct": 0.0, "total_readings": 0,
+                })
+                continue
+
+            folder_path = path.rstrip("/") + "/" + folder.name
+            files = session.list_directory(folder_path)
+
+            # Só baixa arquivos cuja hora (pelo nome) cai dentro (ou na borda) do intervalo pedido
+            relevant_files = []
+            for f in files:
+                if f.is_dir:
+                    continue
+                fdt_naive = parse_filename_datetime(f.name)
+                if fdt_naive is None:
+                    continue
+                fdt_utc = fdt_naive.replace(tzinfo=timezone.utc) + timedelta(hours=3)  # BRT -> UTC, aprox.
+                if start_dt - timedelta(hours=1) <= fdt_utc <= end_dt + timedelta(hours=1):
+                    relevant_files.append(f)
+
+            slots = set()
+            total_readings = 0
+            for f in relevant_files:
+                text = session.fetch_file_text(folder_path, f.name)
+                for r in parse_readings(text, f.name):
+                    if start_dt <= r.timestamp_utc <= end_dt:
+                        elapsed_min = (r.timestamp_utc - start_dt).total_seconds() / 60.0
+                        slots.add(int(elapsed_min // interval_minutes))
+                        total_readings += 1
+
+            received = len(slots)
+            pct = min(100.0, round(100.0 * received / expected, 1)) if expected else 0.0
+            results.append({
+                "cod_inema": st["cod_inema"], "nome_estacao": st.get("nome_estacao"),
+                "municipio": st.get("municipio"), "expected": expected, "received": received,
+                "pct": pct, "total_readings": total_readings,
+            })
+    except FtpAbortedError:
+        return jsonify({"error": "Consulta interrompida pelo usuário.", "aborted": True}), 499
+    except FtpClientError as e:
+        return jsonify({"error": str(e)}), 502
+    finally:
+        session.close()
+        _unregister_op(request_id)
+
+    results.sort(key=lambda r: r["pct"])
+
+    return jsonify({
+        "start": start_dt.isoformat(), "end": end_dt.isoformat(),
+        "interval_minutes": interval_minutes, "results": results,
     })
 
 

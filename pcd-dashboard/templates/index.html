@@ -393,6 +393,27 @@
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
+  .subtab-btn {
+    width: auto;
+    margin-top: 0;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 10px 4px;
+    margin-right: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+  .subtab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+  .subtab-btn:hover { filter: none; color: var(--text); }
+
+  .subtab-panel { display: none; }
+  .subtab-panel.active { display: block; }
+
   .link-btn {
     width: auto;
     background: transparent;
@@ -452,6 +473,7 @@
     <button class="tab-btn active" data-tab="status">Status atual</button>
     <button class="tab-btn" data-tab="coverage">Percentual de transmissão</button>
     <button class="tab-btn" data-tab="fieldtest">Teste de campo</button>
+    <button class="tab-btn" data-tab="cellular">PCDs Celular (FTP)</button>
   </div>
 
   <!-- ==================== ABA 1: STATUS ATUAL ==================== -->
@@ -660,6 +682,130 @@
           </div>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- ==================== ABA 4: PCDs CELULAR (FTP) ==================== -->
+  <div class="tab-panel" id="panel-cellular">
+    <div class="tabs" style="margin-bottom:16px;">
+      <button class="subtab-btn active" data-subtab="cStatus">Status atual</button>
+      <button class="subtab-btn" data-subtab="cCoverage">Percentual de transmissão</button>
+    </div>
+
+    <div class="subtab-panel active" id="subtab-cStatus">
+    <div style="display:grid; grid-template-columns:320px 1fr; gap:24px;">
+      <section class="panel">
+        <h2>Parâmetros de conexão FTP</h2>
+
+        <label for="cHost">Servidor FTP</label>
+        <input id="cHost" value="webfiles.inema.ba.gov.br">
+
+        <div class="row2">
+          <div>
+            <label for="cPort">Porta</label>
+            <input id="cPort" value="21">
+          </div>
+          <div>
+            <label for="cUsername">Usuário FTP</label>
+            <input id="cUsername" value="ftpconsulta">
+          </div>
+        </div>
+
+        <label for="cPassword">Senha</label>
+        <input id="cPassword" type="password" value="r8d7ARudUv">
+
+        <label for="cPath">Diretório</label>
+        <input id="cPath" value="/FTPCONSULTA/PCD-PLU/">
+
+        <label for="cThreshold" style="margin-top:14px;">Alerta sem transmitir (h)</label>
+        <input id="cThreshold" value="6">
+
+        <div class="row2" style="margin-top:20px;">
+          <button id="cRunBtn" style="margin-top:0;">Consultar estações</button>
+          <button id="cStopBtn" type="button" style="margin-top:0; display:none; background:var(--red); color:#fff;">Parar consulta</button>
+        </div>
+        <button class="link-btn" id="cBrowseBtn" type="button">Explorar arquivos brutos do FTP</button>
+        <div class="hint">São 49 PCDs pluviométricas via celular (DualBase), cadastradas em <code>stations_ftp.json</code>. Cada estação tem uma subpasta no FTP nomeada com o código INEMA; dentro dela, um arquivo por hora.</div>
+        <div class="error-box" id="cErrorBox"></div>
+      </section>
+
+      <section class="panel">
+        <div class="results-head">
+          <h2 style="margin:0;">Status das PCDs celulares</h2>
+          <div class="summary" id="cSummary" style="display:none;">
+            <div class="ok"><div class="n" id="cSumOk">0</div>OK</div>
+            <div class="down"><div class="n" id="cSumDown">0</div>SEM TRANSMISSÃO</div>
+          </div>
+        </div>
+        <div id="cTableWrap">
+          <div class="empty-state">
+            <div class="glyph">📶</div>
+            Clique em "Consultar estações" pra checar o status das 49 PCDs celulares.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" id="cBrowsePanel" style="display:none; margin-top:24px;">
+      <div class="results-head">
+        <h2 style="margin:0;">Arquivos brutos no diretório FTP</h2>
+        <button class="link-btn" id="cBrowseCloseBtn" type="button" style="margin-top:0;">Fechar</button>
+      </div>
+      <div id="cBrowseWrap"></div>
+    </section>
+    </div>
+
+    <div class="subtab-panel" id="subtab-cCoverage">
+      <div style="display:grid; grid-template-columns:320px 1fr; gap:24px;">
+        <section class="panel">
+          <h2>Parâmetros de conexão FTP</h2>
+
+          <label for="cHost2">Servidor FTP</label>
+          <input id="cHost2" value="webfiles.inema.ba.gov.br">
+
+          <div class="row2">
+            <div>
+              <label for="cPort2">Porta</label>
+              <input id="cPort2" value="21">
+            </div>
+            <div>
+              <label for="cUsername2">Usuário FTP</label>
+              <input id="cUsername2" value="ftpconsulta">
+            </div>
+          </div>
+
+          <label for="cPassword2">Senha</label>
+          <input id="cPassword2" type="password" value="r8d7ARudUv">
+
+          <label for="cPath2">Diretório</label>
+          <input id="cPath2" value="/FTPCONSULTA/PCD-PLU/">
+
+          <h2 style="margin-top:24px;">Intervalo (UTC)</h2>
+          <label for="cStartDt">Início</label>
+          <input id="cStartDt" type="datetime-local">
+          <label for="cEndDt">Fim</label>
+          <input id="cEndDt" type="datetime-local">
+          <label for="cInterval">Intervalo esperado entre leituras (min)</label>
+          <input id="cInterval" value="10">
+
+          <div class="row2" style="margin-top:20px;">
+            <button id="cCovRunBtn" style="margin-top:0;">Calcular percentual</button>
+            <button id="cCovStopBtn" type="button" style="margin-top:0; display:none; background:var(--red); color:#fff;">Parar consulta</button>
+          </div>
+          <div class="hint">As leituras são feitas a cada ~10 minutos. Datas em UTC (mesmo padrão do resto do app) — a aplicação converte automaticamente a partir do horário local gravado nos arquivos.</div>
+          <div class="error-box" id="cCovErrorBox"></div>
+        </section>
+
+        <section class="panel">
+          <h2 style="margin:0 0 16px;">Percentual de transmissão por PCD</h2>
+          <div id="cCovTableWrap">
+            <div class="empty-state">
+              <div class="glyph">◔ ◑ ◕</div>
+              Configure o intervalo de datas, depois clique em<br>"Calcular percentual".
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </main>
@@ -1213,6 +1359,257 @@ ftRunBtn.addEventListener('click', async () => {
     ftRunBtn.style.display = 'block';
     ftStopBtn.style.display = 'none';
   }
+});
+
+// ---------- Sub-abas dentro de "PCDs Celular (FTP)" ----------
+document.querySelectorAll('.subtab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.subtab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+  });
+});
+
+// ---------- Aba 5: PCDs Celular (FTP) — sub-aba Status ----------
+const cRunBtn = document.getElementById('cRunBtn');
+const cStopBtn = document.getElementById('cStopBtn');
+const cErrorBox = document.getElementById('cErrorBox');
+const cTableWrap = document.getElementById('cTableWrap');
+const cSummary = document.getElementById('cSummary');
+const cBrowseBtn = document.getElementById('cBrowseBtn');
+const cBrowsePanel = document.getElementById('cBrowsePanel');
+const cBrowseWrap = document.getElementById('cBrowseWrap');
+const cBrowseCloseBtn = document.getElementById('cBrowseCloseBtn');
+
+function cConnParams() {
+  return {
+    host: document.getElementById('cHost').value.trim(),
+    port: parseInt(document.getElementById('cPort').value, 10) || 21,
+    path: document.getElementById('cPath').value.trim(),
+    username: document.getElementById('cUsername').value.trim(),
+    password: document.getElementById('cPassword').value,
+  };
+}
+
+function fmtCTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toISOString().replace('T', ' ').substring(0, 19) + 'Z';
+}
+
+function cStatusLabel(s) {
+  return s === 'ok' ? 'OK' : 'SEM TRANSMISSÃO';
+}
+
+function setupAbortableRun(btn, stopBtn, errorBox, requestPayloadFn, url, onSuccess) {
+  btn.addEventListener('click', async () => {
+    errorBox.style.display = 'none';
+    const requestId = (crypto.randomUUID ? crypto.randomUUID() : 'req-' + Date.now() + '-' + Math.random());
+    const payload = { ...requestPayloadFn(), request_id: requestId };
+
+    if (!payload.host) { errorBox.textContent = 'Informe o host do FTP.'; errorBox.style.display = 'block'; return; }
+    if (!payload.username) { errorBox.textContent = 'Informe o usuário FTP.'; errorBox.style.display = 'block'; return; }
+
+    const controller = new AbortController();
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Consultando...';
+    btn.style.display = 'none';
+    stopBtn.style.display = 'block';
+    let aborting = false;
+
+    stopBtn.disabled = false;
+    stopBtn.textContent = 'Parar consulta';
+    stopBtn.onclick = async () => {
+      aborting = true;
+      stopBtn.disabled = true;
+      stopBtn.textContent = 'Parando...';
+      controller.abort();
+      try {
+        await fetch('/api/abort', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ request_id: requestId }),
+        });
+      } catch (e) { /* ignora */ }
+    };
+
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        errorBox.textContent = data.error || 'Erro desconhecido.';
+        errorBox.style.display = 'block';
+      } else {
+        onSuccess(data);
+      }
+    } catch (e) {
+      errorBox.textContent = (aborting || e.name === 'AbortError') ? 'Consulta interrompida.' : ('Falha de rede: ' + e.message);
+      errorBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+      btn.style.display = 'block';
+      stopBtn.style.display = 'none';
+    }
+  });
+}
+
+setupAbortableRun(cRunBtn, cStopBtn, cErrorBox, () => ({
+  ...cConnParams(),
+  threshold_hours: parseFloat(document.getElementById('cThreshold').value) || 6,
+}), '/api/ftp/status', (data) => {
+  const results = data.results;
+  let ok = 0, down = 0;
+  const rows = results.map(r => {
+    if (r.status === 'ok') ok++; else down++;
+    return `
+      <tr>
+        <td class="addr">${escapeHtml(r.cod_inema)}</td>
+        <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+        <td>${escapeHtml(r.municipio) || '—'}</td>
+        <td><span class="status-pill ${r.status === 'ok' ? 'ok' : 'sem_transmitir'}">${cStatusLabel(r.status)}</span></td>
+        <td>${fmtCTime(r.last_transmission)}</td>
+        <td>${fmtAge(r.age_hours)}</td>
+        <td>${escapeHtml(r.pasta_encontrada) || '—'}</td>
+        <td class="data-cell">${escapeHtml(r.data_text) || '—'}</td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('cSumOk').textContent = ok;
+  document.getElementById('cSumDown').textContent = down;
+  cSummary.style.display = 'flex';
+
+  cTableWrap.innerHTML = `
+    <div class="hint" style="margin-bottom:12px;">Consultado em ${fmtCTime(data.queried_at)}</div>
+    <div class="table-scroll"><table>
+      <thead>
+        <tr>
+          <th>Cód INEMA</th>
+          <th>Estação</th>
+          <th>Município</th>
+          <th>Status</th>
+          <th>Última transmissão (UTC)</th>
+          <th>Há quanto tempo</th>
+          <th>Pasta encontrada</th>
+          <th>Última linha de dado</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  `;
+});
+
+cBrowseBtn.addEventListener('click', async () => {
+  cErrorBox.style.display = 'none';
+  const payload = cConnParams();
+  if (!payload.host || !payload.username) {
+    cErrorBox.textContent = 'Preencha host e usuário antes de explorar o diretório.';
+    cErrorBox.style.display = 'block';
+    return;
+  }
+
+  cBrowseBtn.disabled = true;
+  cBrowseBtn.textContent = 'Carregando...';
+  try {
+    const resp = await fetch('/api/ftp/browse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      cErrorBox.textContent = data.error || 'Erro ao explorar diretório.';
+      cErrorBox.style.display = 'block';
+      return;
+    }
+
+    const rows = data.entries.map(e => `
+      <tr>
+        <td class="addr">${escapeHtml(e.name)}</td>
+        <td>${e.is_dir ? 'pasta' : 'arquivo'}</td>
+        <td>${e.size !== null ? e.size + ' bytes' : '—'}</td>
+        <td>${fmtCTime(e.mtime)}</td>
+      </tr>`).join('');
+
+    cBrowseWrap.innerHTML = `
+      <div class="hint" style="margin-bottom:12px;">${data.count} item(ns) em <code>${escapeHtml(data.path)}</code> ${data.entries.some(e=>e.is_dir) ? '— clique numa pasta específica mudando o campo "Diretório" pra ver os arquivos dela' : ''}</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Nome</th><th>Tipo</th><th>Tamanho</th><th>Última modificação (UTC, informativo)</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    `;
+    cBrowsePanel.style.display = 'block';
+    cBrowsePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    cErrorBox.textContent = 'Falha de rede: ' + e.message;
+    cErrorBox.style.display = 'block';
+  } finally {
+    cBrowseBtn.disabled = false;
+    cBrowseBtn.textContent = 'Explorar arquivos brutos do FTP';
+  }
+});
+
+cBrowseCloseBtn.addEventListener('click', () => { cBrowsePanel.style.display = 'none'; });
+
+// ---------- Aba 5: PCDs Celular (FTP) — sub-aba Percentual de transmissão ----------
+(function setDefaultCDates() {
+  const now = new Date();
+  const start = new Date(now.getTime() - 24 * 3600 * 1000);
+  const toLocalInput = (d) => d.toISOString().slice(0, 16);
+  document.getElementById('cStartDt').value = toLocalInput(start);
+  document.getElementById('cEndDt').value = toLocalInput(now);
+})();
+
+const cCovRunBtn = document.getElementById('cCovRunBtn');
+const cCovStopBtn = document.getElementById('cCovStopBtn');
+const cCovErrorBox = document.getElementById('cCovErrorBox');
+const cCovTableWrap = document.getElementById('cCovTableWrap');
+
+setupAbortableRun(cCovRunBtn, cCovStopBtn, cCovErrorBox, () => ({
+  host: document.getElementById('cHost2').value.trim(),
+  port: parseInt(document.getElementById('cPort2').value, 10) || 21,
+  path: document.getElementById('cPath2').value.trim(),
+  username: document.getElementById('cUsername2').value.trim(),
+  password: document.getElementById('cPassword2').value,
+  start: document.getElementById('cStartDt').value,
+  end: document.getElementById('cEndDt').value,
+  interval_minutes: parseFloat(document.getElementById('cInterval').value) || 10,
+}), '/api/ftp/coverage', (data) => {
+  const results = data.results;
+  const rows = results.map(r => `
+    <tr>
+      <td class="addr">${escapeHtml(r.cod_inema)}</td>
+      <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+      <td>${escapeHtml(r.municipio) || '—'}</td>
+      <td>
+        <div class="pct-bar-track"><div class="pct-bar-fill ${pctClass(r.pct)}" style="width:${r.pct}%"></div></div>
+        <span>${r.pct}%</span>
+      </td>
+      <td>${r.received} / ${r.expected}</td>
+      <td>${r.total_readings}</td>
+    </tr>`).join('');
+
+  cCovTableWrap.innerHTML = `
+    <div class="table-scroll"><table>
+      <thead>
+        <tr>
+          <th>Cód INEMA</th>
+          <th>Estação</th>
+          <th>Município</th>
+          <th>% Transmissão</th>
+          <th>Recebidas / Esperadas</th>
+          <th>Total de leituras</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  `;
 });
 </script>
 </body>
