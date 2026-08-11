@@ -646,7 +646,7 @@ def api_ftp_coverage():
                 fdt_naive = parse_filename_datetime(f.name)
                 if fdt_naive is None:
                     continue
-                fdt_utc = fdt_naive.replace(tzinfo=timezone.utc) + timedelta(hours=3)  # BRT -> UTC, aprox.
+                fdt_utc = fdt_naive.replace(tzinfo=timezone.utc)  # nome do arquivo já é UTC
                 if start_dt - timedelta(hours=1) <= fdt_utc <= end_dt + timedelta(hours=1):
                     relevant_files.append(f)
 

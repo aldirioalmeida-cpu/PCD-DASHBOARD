@@ -297,6 +297,24 @@
     border-bottom: 1px solid var(--line);
   }
 
+  th.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  th.sortable-th:hover { color: var(--text); }
+  th.sortable-th .sort-arrow {
+    display: inline-block;
+    width: 10px;
+    margin-left: 3px;
+    opacity: 0.35;
+  }
+  th.sortable-th .sort-arrow::after { content: '↕'; }
+  th.sortable-th.sort-asc .sort-arrow { opacity: 1; color: var(--amber); }
+  th.sortable-th.sort-asc .sort-arrow::after { content: '↑'; }
+  th.sortable-th.sort-desc .sort-arrow { opacity: 1; color: var(--amber); }
+  th.sortable-th.sort-desc .sort-arrow::after { content: '↓'; }
+
   tbody tr {
     border-bottom: 1px solid rgba(34,48,74,0.5);
   }
@@ -828,10 +846,15 @@ function fmtAge(hours) {
   return (hours / 24).toFixed(1) + ' dias';
 }
 
+// Todo horário que o back-end devolve é UTC. Pra exibição, convertemos
+// sempre para horário de Brasília (BRT, UTC-3, sem horário de verão).
+const BRT_OFFSET_MS = 3 * 3600 * 1000;
+
 function fmtTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return d.toISOString().replace('T', ' ').substring(0, 19) + 'Z';
+  const brt = new Date(d.getTime() - BRT_OFFSET_MS);
+  return brt.toISOString().replace('T', ' ').substring(0, 19);
 }
 
 function signalPct(sig) {
@@ -856,38 +879,109 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+// ---------- Utilitário genérico de tabela ordenável por coluna ----------
+// Uso:
+//   const sortable = makeSortableTable({ getData, setData, renderRows, tbodySelector });
+//   ... ao montar o HTML da tabela, use sortable.thHtml('campo', 'Rótulo') no lugar de <th>...</th>
+//   ... depois de inserir o HTML no DOM, chame sortable.attach(containerEl)
+function makeSortableTable({ getData, setData, renderRows, tbodySelector }) {
+  const state = { key: null, dir: 1 };
+
+  function compare(a, b) {
+    let va = a[state.key], vb = b[state.key];
+    const na = (va === null || va === undefined || va === '');
+    const nb = (vb === null || vb === undefined || vb === '');
+    if (na && nb) return 0;
+    if (na) return 1;   // valores vazios sempre vão pro final, não importa a direção
+    if (nb) return -1;
+    if (typeof va === 'string' && typeof vb === 'string') {
+      return state.dir * va.localeCompare(vb, 'pt-BR', { numeric: true, sensitivity: 'base' });
+    }
+    if (va > vb) return state.dir;
+    if (va < vb) return -state.dir;
+    return 0;
+  }
+
+  function applySort() {
+    if (!state.key) return;
+    const data = getData();
+    data.sort(compare);
+    setData(data);
+  }
+
+  function thHtml(key, label) {
+    return `<th data-sort-key="${escapeHtml(key)}" class="sortable-th">${escapeHtml(label)}<span class="sort-arrow"></span></th>`;
+  }
+
+  function updateArrows(containerEl) {
+    containerEl.querySelectorAll('th.sortable-th').forEach(th => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (th.dataset.sortKey === state.key) {
+        th.classList.add(state.dir === 1 ? 'sort-asc' : 'sort-desc');
+      }
+    });
+  }
+
+  function attach(containerEl) {
+    containerEl.querySelectorAll('th.sortable-th').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sortKey;
+        if (state.key === key) {
+          state.dir *= -1;
+        } else {
+          state.key = key;
+          state.dir = 1;
+        }
+        applySort();
+        const tbody = containerEl.querySelector(tbodySelector || 'tbody');
+        tbody.innerHTML = renderRows(getData());
+        updateArrows(containerEl);
+      });
+    });
+    updateArrows(containerEl);
+  }
+
+  return { thHtml, attach, state };
+}
+
+function renderStatusRow(r) {
+  const sig = r.signal_strength ? r.signal_strength + ' dBm*' : '—';
+  const pct = signalPct(r.signal_strength);
+  const dataText = r.data_text ? escapeHtml(r.data_text) : '—';
+
+  return `
+    <tr>
+      <td class="addr">${r.dcp_address}</td>
+      <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+      <td>${escapeHtml(r.municipio) || '—'}</td>
+      <td>${escapeHtml(r.cod_inema) || '—'}</td>
+      <td><span class="status-pill ${r.status}">${statusLabel(r.status)}</span></td>
+      <td>${fmtTime(r.last_transmission)}</td>
+      <td>${fmtAge(r.age_hours)}</td>
+      <td>${r.data_quality_desc || '—'}</td>
+      <td>
+        <div class="signal-bar">
+          <div class="signal-track"><div class="signal-fill" style="width:${pct}%"></div></div>
+          <span>${sig}</span>
+        </div>
+      </td>
+      <td>${r.channel ? r.channel + (r.spacecraft || '') : '—'}</td>
+      <td class="data-cell" title="${dataText}">${dataText}</td>
+    </tr>`;
+}
+function renderStatusRows(results) { return results.map(renderStatusRow).join(''); }
+
+let statusData = [];
+const statusSortable = makeSortableTable({
+  getData: () => statusData,
+  setData: (d) => { statusData = d; },
+  renderRows: renderStatusRows,
+});
+
 function render(data) {
-  const results = data.results;
+  statusData = data.results;
   let ok = 0, down = 0;
-
-  const rows = results.map(r => {
-    if (r.status === 'ok') ok++;
-    else down++;
-
-    const sig = r.signal_strength ? r.signal_strength + ' dBm*' : '—';
-    const pct = signalPct(r.signal_strength);
-    const dataText = r.data_text ? escapeHtml(r.data_text) : '—';
-
-    return `
-      <tr>
-        <td class="addr">${r.dcp_address}</td>
-        <td>${escapeHtml(r.nome_estacao) || '—'}</td>
-        <td>${escapeHtml(r.municipio) || '—'}</td>
-        <td>${escapeHtml(r.cod_inema) || '—'}</td>
-        <td><span class="status-pill ${r.status}">${statusLabel(r.status)}</span></td>
-        <td>${fmtTime(r.last_transmission)}</td>
-        <td>${fmtAge(r.age_hours)}</td>
-        <td>${r.data_quality_desc || '—'}</td>
-        <td>
-          <div class="signal-bar">
-            <div class="signal-track"><div class="signal-fill" style="width:${pct}%"></div></div>
-            <span>${sig}</span>
-          </div>
-        </td>
-        <td>${r.channel ? r.channel + (r.spacecraft || '') : '—'}</td>
-        <td class="data-cell" title="${dataText}">${dataText}</td>
-      </tr>`;
-  }).join('');
+  statusData.forEach(r => r.status === 'ok' ? ok++ : down++);
 
   document.getElementById('sumOk').textContent = ok;
   document.getElementById('sumDown').textContent = down;
@@ -897,22 +991,23 @@ function render(data) {
     <div class="table-scroll"><table>
       <thead>
         <tr>
-          <th>Endereço</th>
-          <th>Estação</th>
-          <th>Município</th>
-          <th>Cód INEMA</th>
-          <th>Status</th>
-          <th>Última transmissão (UTC)</th>
-          <th>Há quanto tempo</th>
-          <th>Qualidade</th>
-          <th>Sinal</th>
-          <th>Canal</th>
-          <th>Última mensagem (dados)</th>
+          ${statusSortable.thHtml('dcp_address', 'Endereço')}
+          ${statusSortable.thHtml('nome_estacao', 'Estação')}
+          ${statusSortable.thHtml('municipio', 'Município')}
+          ${statusSortable.thHtml('cod_inema', 'Cód INEMA')}
+          ${statusSortable.thHtml('status', 'Status')}
+          ${statusSortable.thHtml('last_transmission', 'Última transmissão (Brasília)')}
+          ${statusSortable.thHtml('age_hours', 'Há quanto tempo')}
+          ${statusSortable.thHtml('data_quality_desc', 'Qualidade')}
+          ${statusSortable.thHtml('signal_strength', 'Sinal')}
+          ${statusSortable.thHtml('channel', 'Canal')}
+          ${statusSortable.thHtml('data_text', 'Última mensagem (dados)')}
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${renderStatusRows(statusData)}</tbody>
     </table></div>
   `;
+  statusSortable.attach(tableWrap);
 
   lastQuery.textContent = fmtTime(data.queried_at);
 }
@@ -950,6 +1045,29 @@ function pctClass(pct) {
   if (pct >= 60) return 'pct-mid';
   return 'pct-low';
 }
+
+function renderCovRow(r) {
+  return `
+    <tr>
+      <td class="addr">${r.dcp_address}</td>
+      <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+      <td>${escapeHtml(r.municipio) || '—'}</td>
+      <td>${escapeHtml(r.cod_inema) || '—'}</td>
+      <td>
+        <div class="pct-bar-track"><div class="pct-bar-fill ${pctClass(r.pct)}" style="width:${r.pct}%"></div></div>
+        <span>${r.pct}%</span>
+      </td>
+      <td>${r.received} / ${r.expected}</td>
+      <td>${r.total_messages}</td>
+    </tr>`;
+}
+function renderCovRows(results) { return results.map(renderCovRow).join(''); }
+let covData = [];
+const covSortable = makeSortableTable({
+  getData: () => covData,
+  setData: (d) => { covData = d; },
+  renderRows: renderCovRows,
+});
 
 document.getElementById('runCoverageBtn').addEventListener('click', async () => {
   const errorBoxCov = document.getElementById('errorBoxCov');
@@ -1031,36 +1149,24 @@ document.getElementById('runCoverageBtn').addEventListener('click', async () => 
       }
       summaryCov.style.display = 'block';
 
-      const rows = results.map(r => `
-        <tr>
-          <td class="addr">${r.dcp_address}</td>
-          <td>${escapeHtml(r.nome_estacao) || '—'}</td>
-          <td>${escapeHtml(r.municipio) || '—'}</td>
-          <td>${escapeHtml(r.cod_inema) || '—'}</td>
-          <td>
-            <div class="pct-bar-track"><div class="pct-bar-fill ${pctClass(r.pct)}" style="width:${r.pct}%"></div></div>
-            <span>${r.pct}%</span>
-          </td>
-          <td>${r.received} / ${r.expected}</td>
-          <td>${r.total_messages}</td>
-        </tr>`).join('');
-
+      covData = results;
       tableWrapCov.innerHTML = `
         <div class="table-scroll"><table>
           <thead>
             <tr>
-              <th>Endereço</th>
-              <th>Estação</th>
-              <th>Município</th>
-              <th>Cód INEMA</th>
-              <th>% Transmissão</th>
-              <th>Recebidas / Esperadas</th>
-              <th>Total msgs</th>
+              ${covSortable.thHtml('dcp_address', 'Endereço')}
+              ${covSortable.thHtml('nome_estacao', 'Estação')}
+              ${covSortable.thHtml('municipio', 'Município')}
+              ${covSortable.thHtml('cod_inema', 'Cód INEMA')}
+              ${covSortable.thHtml('pct', '% Transmissão')}
+              ${covSortable.thHtml('received', 'Recebidas / Esperadas')}
+              ${covSortable.thHtml('total_messages', 'Total msgs')}
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
+          <tbody>${renderCovRows(covData)}</tbody>
         </table></div>
       `;
+      covSortable.attach(tableWrapCov);
     }
   } catch (e) {
     if (aborting || e.name === 'AbortError') {
@@ -1213,9 +1319,27 @@ async function loadFieldTestStations() {
 document.querySelector('.tab-btn[data-tab="fieldtest"]').addEventListener('click', loadFieldTestStations);
 
 function fmtFtTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toISOString().replace('T', ' ').substring(0, 19) + 'Z';
+  return fmtTime(iso);
 }
+
+function renderFtHistoryRow(m) {
+  return `
+    <tr>
+      <td>${fmtFtTime(m.timestamp)}</td>
+      <td>${fmtAge(m.age_hours)}</td>
+      <td>${m.data_quality_desc || '—'}</td>
+      <td>${m.signal_strength ? m.signal_strength + ' dBm*' : '—'}</td>
+      <td>${m.channel ? m.channel + (m.spacecraft || '') : '—'}</td>
+      <td class="data-cell">${escapeHtml(m.data_text) || '—'}</td>
+    </tr>`;
+}
+function renderFtHistoryRows(messages) { return messages.map(renderFtHistoryRow).join(''); }
+let ftHistoryData = [];
+const ftHistorySortable = makeSortableTable({
+  getData: () => ftHistoryData,
+  setData: (d) => { ftHistoryData = d; },
+  renderRows: renderFtHistoryRows,
+});
 
 function renderFieldTestResult(data) {
   const pass = data.found;
@@ -1234,35 +1358,26 @@ function renderFieldTestResult(data) {
       <div class="ft-info-item"><div class="k">Município</div><div class="v">${escapeHtml(data.municipio) || '—'}</div></div>
       <div class="ft-info-item"><div class="k">Cód INEMA</div><div class="v">${escapeHtml(data.cod_inema) || '—'}</div></div>
       <div class="ft-info-item"><div class="k">Categoria</div><div class="v">${escapeHtml(data.categoria) || '—'}</div></div>
-      <div class="ft-info-item"><div class="k">Testado em (UTC)</div><div class="v">${fmtFtTime(data.tested_at)}</div></div>
+      <div class="ft-info-item"><div class="k">Testado em (Brasília)</div><div class="v">${fmtFtTime(data.tested_at)}</div></div>
     </div>`;
 
   let historyTable = '';
-  if (data.messages && data.messages.length > 0) {
-    const rows = data.messages.map(m => `
-      <tr>
-        <td>${fmtFtTime(m.timestamp)}</td>
-        <td>${fmtAge(m.age_hours)}</td>
-        <td>${m.data_quality_desc || '—'}</td>
-        <td>${m.signal_strength ? m.signal_strength + ' dBm*' : '—'}</td>
-        <td>${m.channel ? m.channel + (m.spacecraft || '') : '—'}</td>
-        <td class="data-cell">${escapeHtml(m.data_text) || '—'}</td>
-      </tr>`).join('');
-
+  ftHistoryData = data.messages || [];
+  if (ftHistoryData.length > 0) {
     historyTable = `
       <h2 style="margin:8px 0 12px;">Histórico de mensagens</h2>
-      <div class="table-scroll"><table>
+      <div class="table-scroll" id="ftHistoryTableWrap"><table>
         <thead>
           <tr>
-            <th>Horário (UTC)</th>
-            <th>Há quanto tempo</th>
-            <th>Qualidade</th>
-            <th>Sinal</th>
-            <th>Canal</th>
-            <th>Dados transmitidos</th>
+            ${ftHistorySortable.thHtml('timestamp', 'Horário (Brasília)')}
+            ${ftHistorySortable.thHtml('age_hours', 'Há quanto tempo')}
+            ${ftHistorySortable.thHtml('data_quality_desc', 'Qualidade')}
+            ${ftHistorySortable.thHtml('signal_strength', 'Sinal')}
+            ${ftHistorySortable.thHtml('channel', 'Canal')}
+            ${ftHistorySortable.thHtml('data_text', 'Dados transmitidos')}
           </tr>
         </thead>
-        <tbody>${rows}</tbody>
+        <tbody>${renderFtHistoryRows(ftHistoryData)}</tbody>
       </table></div>`;
   }
 
@@ -1277,6 +1392,10 @@ function renderFieldTestResult(data) {
     ${infoGrid}
     ${historyTable}
   `;
+
+  if (ftHistoryData.length > 0) {
+    ftHistorySortable.attach(document.getElementById('ftHistoryTableWrap'));
+  }
 }
 
 ftRunBtn.addEventListener('click', async () => {
@@ -1393,8 +1512,7 @@ function cConnParams() {
 }
 
 function fmtCTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toISOString().replace('T', ' ').substring(0, 19) + 'Z';
+  return fmtTime(iso);
 }
 
 function cStatusLabel(s) {
@@ -1460,49 +1578,76 @@ function setupAbortableRun(btn, stopBtn, errorBox, requestPayloadFn, url, onSucc
   });
 }
 
+function renderCStatusRow(r) {
+  return `
+    <tr>
+      <td class="addr">${escapeHtml(r.cod_inema)}</td>
+      <td>${escapeHtml(r.nome_estacao) || '—'}</td>
+      <td>${escapeHtml(r.municipio) || '—'}</td>
+      <td><span class="status-pill ${r.status === 'ok' ? 'ok' : 'sem_transmitir'}">${cStatusLabel(r.status)}</span></td>
+      <td>${fmtCTime(r.last_transmission)}</td>
+      <td>${fmtAge(r.age_hours)}</td>
+      <td>${escapeHtml(r.pasta_encontrada) || '—'}</td>
+      <td class="data-cell">${escapeHtml(r.data_text) || '—'}</td>
+    </tr>`;
+}
+function renderCStatusRows(results) { return results.map(renderCStatusRow).join(''); }
+let cStatusData = [];
+const cStatusSortable = makeSortableTable({
+  getData: () => cStatusData,
+  setData: (d) => { cStatusData = d; },
+  renderRows: renderCStatusRows,
+});
+
 setupAbortableRun(cRunBtn, cStopBtn, cErrorBox, () => ({
   ...cConnParams(),
   threshold_hours: parseFloat(document.getElementById('cThreshold').value) || 6,
 }), '/api/ftp/status', (data) => {
   const results = data.results;
   let ok = 0, down = 0;
-  const rows = results.map(r => {
-    if (r.status === 'ok') ok++; else down++;
-    return `
-      <tr>
-        <td class="addr">${escapeHtml(r.cod_inema)}</td>
-        <td>${escapeHtml(r.nome_estacao) || '—'}</td>
-        <td>${escapeHtml(r.municipio) || '—'}</td>
-        <td><span class="status-pill ${r.status === 'ok' ? 'ok' : 'sem_transmitir'}">${cStatusLabel(r.status)}</span></td>
-        <td>${fmtCTime(r.last_transmission)}</td>
-        <td>${fmtAge(r.age_hours)}</td>
-        <td>${escapeHtml(r.pasta_encontrada) || '—'}</td>
-        <td class="data-cell">${escapeHtml(r.data_text) || '—'}</td>
-      </tr>`;
-  }).join('');
+  results.forEach(r => r.status === 'ok' ? ok++ : down++);
 
   document.getElementById('cSumOk').textContent = ok;
   document.getElementById('cSumDown').textContent = down;
   cSummary.style.display = 'flex';
 
+  cStatusData = results;
   cTableWrap.innerHTML = `
     <div class="hint" style="margin-bottom:12px;">Consultado em ${fmtCTime(data.queried_at)}</div>
-    <div class="table-scroll"><table>
+    <div class="table-scroll" id="cStatusTableWrap"><table>
       <thead>
         <tr>
-          <th>Cód INEMA</th>
-          <th>Estação</th>
-          <th>Município</th>
-          <th>Status</th>
-          <th>Última transmissão (UTC)</th>
-          <th>Há quanto tempo</th>
-          <th>Pasta encontrada</th>
-          <th>Última linha de dado</th>
+          ${cStatusSortable.thHtml('cod_inema', 'Cód INEMA')}
+          ${cStatusSortable.thHtml('nome_estacao', 'Estação')}
+          ${cStatusSortable.thHtml('municipio', 'Município')}
+          ${cStatusSortable.thHtml('status', 'Status')}
+          ${cStatusSortable.thHtml('last_transmission', 'Última transmissão (Brasília)')}
+          ${cStatusSortable.thHtml('age_hours', 'Há quanto tempo')}
+          ${cStatusSortable.thHtml('pasta_encontrada', 'Pasta encontrada')}
+          ${cStatusSortable.thHtml('data_text', 'Última linha de dado')}
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${renderCStatusRows(cStatusData)}</tbody>
     </table></div>
   `;
+  cStatusSortable.attach(document.getElementById('cStatusTableWrap'));
+});
+
+function renderBrowseRow(e) {
+  return `
+    <tr>
+      <td class="addr">${escapeHtml(e.name)}</td>
+      <td>${e.is_dir ? 'pasta' : 'arquivo'}</td>
+      <td>${e.size !== null ? e.size + ' bytes' : '—'}</td>
+      <td>${fmtCTime(e.mtime)}</td>
+    </tr>`;
+}
+function renderBrowseRows(entries) { return entries.map(renderBrowseRow).join(''); }
+let browseData = [];
+const browseSortable = makeSortableTable({
+  getData: () => browseData,
+  setData: (d) => { browseData = d; },
+  renderRows: renderBrowseRows,
 });
 
 cBrowseBtn.addEventListener('click', async () => {
@@ -1529,21 +1674,20 @@ cBrowseBtn.addEventListener('click', async () => {
       return;
     }
 
-    const rows = data.entries.map(e => `
-      <tr>
-        <td class="addr">${escapeHtml(e.name)}</td>
-        <td>${e.is_dir ? 'pasta' : 'arquivo'}</td>
-        <td>${e.size !== null ? e.size + ' bytes' : '—'}</td>
-        <td>${fmtCTime(e.mtime)}</td>
-      </tr>`).join('');
-
+    browseData = data.entries;
     cBrowseWrap.innerHTML = `
       <div class="hint" style="margin-bottom:12px;">${data.count} item(ns) em <code>${escapeHtml(data.path)}</code> ${data.entries.some(e=>e.is_dir) ? '— clique numa pasta específica mudando o campo "Diretório" pra ver os arquivos dela' : ''}</div>
-      <div class="table-scroll"><table>
-        <thead><tr><th>Nome</th><th>Tipo</th><th>Tamanho</th><th>Última modificação (UTC, informativo)</th></tr></thead>
-        <tbody>${rows}</tbody>
+      <div class="table-scroll" id="cBrowseTableInner"><table>
+        <thead><tr>
+          ${browseSortable.thHtml('name', 'Nome')}
+          ${browseSortable.thHtml('is_dir', 'Tipo')}
+          ${browseSortable.thHtml('size', 'Tamanho')}
+          ${browseSortable.thHtml('mtime', 'Última modificação (Brasília, informativo)')}
+        </tr></thead>
+        <tbody>${renderBrowseRows(browseData)}</tbody>
       </table></div>
     `;
+    browseSortable.attach(document.getElementById('cBrowseTableInner'));
     cBrowsePanel.style.display = 'block';
     cBrowsePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
@@ -1571,18 +1715,8 @@ const cCovStopBtn = document.getElementById('cCovStopBtn');
 const cCovErrorBox = document.getElementById('cCovErrorBox');
 const cCovTableWrap = document.getElementById('cCovTableWrap');
 
-setupAbortableRun(cCovRunBtn, cCovStopBtn, cCovErrorBox, () => ({
-  host: document.getElementById('cHost2').value.trim(),
-  port: parseInt(document.getElementById('cPort2').value, 10) || 21,
-  path: document.getElementById('cPath2').value.trim(),
-  username: document.getElementById('cUsername2').value.trim(),
-  password: document.getElementById('cPassword2').value,
-  start: document.getElementById('cStartDt').value,
-  end: document.getElementById('cEndDt').value,
-  interval_minutes: parseFloat(document.getElementById('cInterval').value) || 10,
-}), '/api/ftp/coverage', (data) => {
-  const results = data.results;
-  const rows = results.map(r => `
+function renderCCovRow(r) {
+  return `
     <tr>
       <td class="addr">${escapeHtml(r.cod_inema)}</td>
       <td>${escapeHtml(r.nome_estacao) || '—'}</td>
@@ -1593,23 +1727,43 @@ setupAbortableRun(cCovRunBtn, cCovStopBtn, cCovErrorBox, () => ({
       </td>
       <td>${r.received} / ${r.expected}</td>
       <td>${r.total_readings}</td>
-    </tr>`).join('');
+    </tr>`;
+}
+function renderCCovRows(results) { return results.map(renderCCovRow).join(''); }
+let cCovData = [];
+const cCovSortable = makeSortableTable({
+  getData: () => cCovData,
+  setData: (d) => { cCovData = d; },
+  renderRows: renderCCovRows,
+});
 
+setupAbortableRun(cCovRunBtn, cCovStopBtn, cCovErrorBox, () => ({
+  host: document.getElementById('cHost2').value.trim(),
+  port: parseInt(document.getElementById('cPort2').value, 10) || 21,
+  path: document.getElementById('cPath2').value.trim(),
+  username: document.getElementById('cUsername2').value.trim(),
+  password: document.getElementById('cPassword2').value,
+  start: document.getElementById('cStartDt').value,
+  end: document.getElementById('cEndDt').value,
+  interval_minutes: parseFloat(document.getElementById('cInterval').value) || 10,
+}), '/api/ftp/coverage', (data) => {
+  cCovData = data.results;
   cCovTableWrap.innerHTML = `
-    <div class="table-scroll"><table>
+    <div class="table-scroll" id="cCovTableInner"><table>
       <thead>
         <tr>
-          <th>Cód INEMA</th>
-          <th>Estação</th>
-          <th>Município</th>
-          <th>% Transmissão</th>
-          <th>Recebidas / Esperadas</th>
-          <th>Total de leituras</th>
+          ${cCovSortable.thHtml('cod_inema', 'Cód INEMA')}
+          ${cCovSortable.thHtml('nome_estacao', 'Estação')}
+          ${cCovSortable.thHtml('municipio', 'Município')}
+          ${cCovSortable.thHtml('pct', '% Transmissão')}
+          ${cCovSortable.thHtml('received', 'Recebidas / Esperadas')}
+          ${cCovSortable.thHtml('total_readings', 'Total de leituras')}
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${renderCCovRows(cCovData)}</tbody>
     </table></div>
   `;
+  cCovSortable.attach(document.getElementById('cCovTableInner'));
 });
 </script>
 </body>

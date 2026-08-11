@@ -42,9 +42,8 @@ Cada arquivo tem várias linhas, uma leitura a cada ~10 minutos, com a
 data/hora real já na própria linha (`"2026-08-06 18:10:00","PG-PR-03",...`).
 A aplicação usa **essa data do conteúdo** (não a data de modificação do
 arquivo, nem só o nome) como referência de última transmissão — é a mais
-precisa. Ela assume que esse horário está em hora local do Brasil (BRT,
-UTC-3) e converte pra UTC internamente, no mesmo padrão usado em todo o
-resto do app.
+precisa. Esse horário já vem em UTC (confirmado), mesmo padrão usado em
+todo o resto do app — sem conversão de fuso.
 
 Tem duas sub-abas, iguais em espírito às do GOES: **Status atual** (última
 leitura de cada estação, com indicador de sem transmissão) e **Percentual
@@ -248,9 +247,10 @@ em conversa).
 estrutura real do `webfiles.inema.ba.gov.br` (pasta por estação, arquivo
 por hora, conteúdo idêntico ao de um arquivo real que foi conferido
 manualmente) — parsing de nomes de arquivo, correspondência de pasta por
-código INEMA, conversão de horário local (BRT) para UTC, e o mecanismo de
-abortar consulta, tudo com testes automatizados passando. A conexão com o
-servidor FTP real da INEMA **não pôde ser testada neste ambiente** (sem
-acesso de rede a esse host neste sandbox) — teste primeiro com poucas
-estações antes de rodar a consulta completa, e use o botão "Explorar
-arquivos brutos do FTP" se alguma correspondência não bater.
+código INEMA (com fallback pro formato de listagem MS-DOS/IIS), leitura
+dos timestamps em UTC, e o mecanismo de abortar consulta, tudo com testes
+automatizados passando. A conexão com o servidor FTP real da INEMA **não
+pôde ser testada neste ambiente** (sem acesso de rede a esse host neste
+sandbox) — teste primeiro com poucas estações antes de rodar a consulta
+completa, e use o botão "Explorar arquivos brutos do FTP" se alguma
+correspondência não bater.

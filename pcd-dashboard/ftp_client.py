@@ -23,9 +23,8 @@ data/hora real da leitura já na própria linha:
 Estratégia: a data/hora usada como referência de "última transmissão" vem
 SEMPRE do conteúdo da linha (campo 1), nunca do nome do arquivo nem da
 data de modificação do FTP — o conteúdo é o dado real e mais preciso.
-Assume-se que esse horário está em hora local do Brasil (BRT, UTC-3, sem
-horário de verão desde 2019) e é convertido para UTC internamente, para
-ficar no mesmo padrão usado no resto da aplicação (GOES/DDS já é UTC).
+Esse horário já vem em UTC (confirmado) — sem conversão de fuso, no
+mesmo padrão usado no resto da aplicação (GOES/DDS também é UTC).
 """
 
 from __future__ import annotations
@@ -349,8 +348,14 @@ def sort_files_newest_first(entries: list[FtpEntry]) -> list[FtpEntry]:
 _ROW_TS_RE = re.compile(r"^\s*\"?(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\"?")
 
 
-def parse_readings(text: str, source_file: str, local_to_utc: bool = True) -> list[Reading]:
-    """Extrai cada linha do arquivo como uma leitura com timestamp (campo 1)."""
+def parse_readings(text: str, source_file: str, local_to_utc: bool = False) -> list[Reading]:
+    """Extrai cada linha do arquivo como uma leitura com timestamp (campo 1).
+
+    O timestamp gravado nos arquivos do FTP já vem em UTC (confirmado),
+    então por padrão não há conversão. Se algum dia precisar tratar um
+    conjunto de arquivos com timestamp em horário local (BRT, UTC-3),
+    chame com local_to_utc=True.
+    """
     readings: list[Reading] = []
     for line in text.splitlines():
         line = line.strip()
